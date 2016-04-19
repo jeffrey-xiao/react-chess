@@ -1,0 +1,45 @@
+html {
+	width: 100%;
+}
+.board {
+	width: 600px;
+	height: 600px;
+
+	.square {
+		display: inline-block;
+		float: left;
+		font-size: 0;
+		width: calc(12.5% - 4px);
+		height: calc(12.5% - 4px);
+		margin: 0;
+		border: solid 2px transparent;
+		position: relative;
+		& img {
+			height: 100%;
+			width: 100%;
+		}
+		&.black {
+			background-color: #888;
+		}
+		
+		&.white {
+			background-color: #eee;
+		}
+		&.active {
+			width: calc(12.5% - 4px);
+			height: calc(12.5% - 4px);
+			border: solid 2px red;
+		}
+		&.possible:before {
+			content: '';
+			width: 20%;
+			height: 20%;
+			border-radius: 50%;
+			position: absolute;
+			top: 40%;
+			left: 40%;
+			background-color: red;
+			z-index: 100;
+		}
+	}
+}

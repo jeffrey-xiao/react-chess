@@ -1,0 +1,50 @@
+html {
+  width: 100%;
+}
+
+.board {
+  width: 600px;
+  height: 600px;
+}
+
+.board .square {
+  display: inline-block;
+  float: left;
+  font-size: 0;
+  width: calc(12.5% - 4px);
+  height: calc(12.5% - 4px);
+  margin: 0;
+  border: solid 2px transparent;
+  position: relative;
+}
+
+.board .square img {
+  height: 100%;
+  width: 100%;
+}
+
+.board .square.black {
+  background-color: #888;
+}
+
+.board .square.white {
+  background-color: #eee;
+}
+
+.board .square.active {
+  width: calc(12.5% - 4px);
+  height: calc(12.5% - 4px);
+  border: solid 2px red;
+}
+
+.board .square.possible:before {
+  content: '';
+  width: 20%;
+  height: 20%;
+  border-radius: 50%;
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  background-color: red;
+  z-index: 100;
+}
