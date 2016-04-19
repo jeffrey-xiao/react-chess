@@ -1,0 +1,10 @@
+extend ../templates/layout
+
+block content
+	div(id='game')
+
+block scripts
+	script(type="text/javascript" src="/socket.io/socket.io.js")
+	script(type='text/javascript').
+		var socket = io();
+	script(type="text/javascript" src="../bundle.js")

@@ -10,6 +10,8 @@
     "express": "^4.13.4",
     "firebase": "^2.4.2",
     "http": "0.0.0",
+    "immutable": "^3.8.1",
+    "jade": "^1.11.0",
     "jquery": "^2.2.3",
     "marked": "^0.3.5",
     "morgan": "^1.7.0",
@@ -17,7 +19,8 @@
     "react": "^0.14.8",
     "react-dom": "^0.14.8",
     "react-redux": "^4.4.5",
-    "redux": "^3.4.0"
+    "redux": "^3.4.0",
+    "socket.io": "^1.4.5"
   },
   "devDependencies": {},
   "scripts": {
