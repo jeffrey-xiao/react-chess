@@ -64,16 +64,11 @@ var Board = React.createClass({
 									onClick={this.handleClick}>
 								  </Square>);
 		}
-		if (this.props.gameState == 'READY') {
-			return (
-				<div className="board">
-					{children}
-					{this.props.color}
-				</div>
-			);
-		} else {
-			return (<h1>{this.props.color}</h1>);
-		}
+		return (
+			<div className="board">
+				{children}
+			</div>
+		);
 	}
 });
 		

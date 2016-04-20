@@ -14,7 +14,7 @@ var reducer = function (state, action) {
 	
 	switch (action.type) {
 		case 'MOVE':
-			newState.state.move({from: action.from, to: action.to});
+			newState.state.move({from: action.from, to: action.to, promotion: 'q'});
 			break;
 		case 'SET_BOARD':
 			newState.state = new Chess(action.fen);
