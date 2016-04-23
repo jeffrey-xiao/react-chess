@@ -33,7 +33,7 @@ var Board = React.createClass({
 
 	render: function () {
 		var children = [];
-		// if white on bottom
+
 		var validMoves = this.props.state.moves({square: Functions.toCode(this.state.activeRow, this.state.activeCol), verbose: true});
 		var validSquares = []; 
 		for (var i = 0; i < validMoves.length; i++)

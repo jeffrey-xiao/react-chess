@@ -125,7 +125,7 @@ var Board = React.createClass({
 
 	render: function () {
 		var children = [];
-		// if white on bottom
+
 		var validMoves = this.props.state.moves({ square: Functions.toCode(this.state.activeRow, this.state.activeCol), verbose: true });
 		var validSquares = [];
 		for (var i = 0; i < validMoves.length; i++) validSquares.push(validMoves[i].to);
@@ -218,7 +218,7 @@ module.exports = function (state) {
 };
 
 },{}],5:[function(require,module,exports){
-var Chess = require('../../../../chess.min.js').Chess;
+var Chess = require('../../lib/chess.min.js').Chess;
 var Redux = require('redux');
 
 var initialState = {
@@ -244,7 +244,7 @@ var reducer = function (state, action) {
 
 module.exports = Redux.createStore(reducer, initialState);
 
-},{"../../../../chess.min.js":12,"redux":192}],6:[function(require,module,exports){
+},{"../../lib/chess.min.js":12,"redux":192}],6:[function(require,module,exports){
 var React = require('react');
 
 var Error = React.createClass({
@@ -949,12 +949,12 @@ var marked = require('marked');
 var Redux = require('redux');
 var ReactRedux = require('react-redux');
 var $ = require('jquery');
-var Chess = require('./chess.min.js').Chess;
+var Chess = require('./lib/chess.min.js').Chess;
 
-var BoardStore = require('./assets/js/components/Board/BoardStore.js');
+var BoardStore = require('./components/Board/BoardStore.js');
 
-var Game = require('./assets/js/components/Game/Game.js');
-var GameForm = require('./assets/js/components/GameForm/GameForm.js');
+var Game = require('./components/Game/Game.js');
+var GameForm = require('./components/GameForm/GameForm.js');
 
 var token = window.location.href.split('/')[4];
 
@@ -968,7 +968,7 @@ if (document.getElementById('game') != null) ReactDOM.render(React.createElement
 
 if (document.getElementById('gameform') != null) ReactDOM.render(React.createElement(GameForm, null), document.getElementById('gameform'));
 
-},{"./assets/js/components/Board/BoardStore.js":5,"./assets/js/components/Game/Game.js":8,"./assets/js/components/GameForm/GameForm.js":7,"./chess.min.js":12,"jquery":44,"marked":45,"react":186,"react-dom":46,"react-redux":49,"redux":192}],14:[function(require,module,exports){
+},{"./components/Board/BoardStore.js":5,"./components/Game/Game.js":8,"./components/GameForm/GameForm.js":7,"./lib/chess.min.js":12,"jquery":44,"marked":45,"react":186,"react-dom":46,"react-redux":49,"redux":192}],14:[function(require,module,exports){
 (function (process){
 /**
  * Copyright 2013-2015, Facebook, Inc.
