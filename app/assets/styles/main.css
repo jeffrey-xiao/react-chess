@@ -2,6 +2,47 @@ html {
   width: 100%;
 }
 
+.clear {
+  clear: both;
+}
+
+.pieceSupplies {
+  width: 600px;
+  height: 50px;
+  margin: 20px 0px;
+  text-align: center;
+}
+
+.pieceSupplies .pieceSupply {
+  width: 50px;
+  height: 50px;
+  margin: 0px 10px auto;
+  display: inline-block;
+  position: relative;
+}
+
+.pieceSupplies .pieceSupply img {
+  width: 100%;
+  height: 100%;
+  border: 1px black solid;
+  border-radius: 5px;
+}
+
+.pieceSupplies .pieceSupply .pieceSupplyCount {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background-color: white;
+  border: 1px black solid;
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
+}
+
+.pieceSupplies .active img {
+  border: 1px red solid !important;
+}
+
 .board {
   width: 600px;
   height: 600px;

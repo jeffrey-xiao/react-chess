@@ -13,8 +13,8 @@ var List = Immutable.List;
 var hostname = 'localhost';
 var port = 8080;
 
-var srcPath = __dirname + '/assets';
-var destPath = __dirname + '/assets';
+var srcPath = __dirname;
+var destPath = __dirname;
 
 app.set('views', __dirname + '/views/pages');
 app.set('view engine', 'jade');
@@ -52,12 +52,6 @@ io.on('connection', function (socket) {
 		
 		var token = players.get(socket.id);
 		
-		if (games.getIn([token, 'creator']) != null && games.getIn([token, 'creator']).id == socket.id) {
-			games = games.delete(token);
-			players.delete(socket.id);
-			return;
-		}
-
 		if (games.get(token) == null)
 			return;
 		
@@ -87,30 +81,51 @@ io.on('connection', function (socket) {
 		for (var i = 0; i < games.getIn([token, 'black']).size; i++)
 			black.push(games.getIn([token, 'black']).get(i).id);
 		
+		console.log("Room update emitted",token);
 		io.to(token).emit('room:update', {
 			white: white,
 			black: black
 		});
 		
+		if (games.getIn([token, 'creator']) != null && games.getIn([token, 'creator']).id == socket.id) {
+			games = games.delete(token);
+			io.to(token).emit('token:invalid');
+		}
+		
 		players.delete(socket.id);
 	});
 	
 	socket.on('game:move', function (data) {
-		console.log("BOARD MOVED", data.userId, data.from, data.to);
+		console.log("BOARD MOVED", data.from, data.to);
 		
-		var opponentSocket;
-		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++) {
-			if (games.getIn([data.token, 'white']).get(i).id == data.userId) {
-				opponentSocket = games.getIn([data.token, 'black']).get(i);
-			} else if (games.getIn([data.token, 'black']).get(i).id == data.userId) {
-				opponentSocket = games.getIn([data.token, 'white']).get(i);
-			}
-		}
-		opponentSocket.emit('game:move', {from: data.from, to: data.to});
+		io.to(data.token).emit('game:move', {
+			from: data.from,
+			to: data.to,
+			boardNum: data.boardNum
+		});
+	});
+	
+	socket.on('game:place', function (data) {
+		console.log("BOARD PLACED", data.piece, data.pos, data.color);
+		io.to(data.token).emit('game:place', {
+			piece: data.piece,
+			pos: data.pos,
+			color: data.color,
+			boardNum: data.boardNum
+		});
 	});
 	
 	socket.on('game:start', function (data) {
-		io.to(data.token).emit('game:start');
+		
+		var numOfBoards = games.getIn([data.token, 'white']).size;
+		
+		var game = games.get(data.token);
+		
+		for (var i = 0; i < game.get('white').size; i++) {
+			game.get('white').get(i).emit('game:start', {boardNum: i, numOfBoards: numOfBoards});
+			game.get('black').get(i).emit('game:start', {boardNum: i, numOfBoards: numOfBoards});
+		}
+		
 		clearTimeout(games.getIn([data.token, 'timeout']));
 	});
 	
@@ -136,6 +151,7 @@ io.on('connection', function (socket) {
 	socket.on('room:join', function (data) {
 		console.log("joining room", data.token);
 		var game = games.get(data.token);
+		
 		if (!game) {
 			socket.emit('token:invalid');
 			return;
@@ -178,6 +194,7 @@ io.on('connection', function (socket) {
 		
 		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++)
 			white.push(games.getIn([data.token, 'white']).get(i).id);
+		
 		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++)
 			black.push(games.getIn([data.token, 'black']).get(i).id);
 		

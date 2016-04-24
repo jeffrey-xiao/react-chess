@@ -7,10 +7,9 @@ var Map = Immutable.Map;
 
 var Board = require('../Board/Board.js');
 var Room = require('../Room/Room.js');
-var BoardDispatch = require('../Board/BoardDispatch.js');
-var BoardStore = require('../Board/BoardStore.js');
-var BoardState = require('../Board/BoardState.js');
 var Error = require('../Error/Error.js');
+
+var Chess = require('../../lib/chess.min.js');
 
 var Game = React.createClass({
 	getInitialState: function () {
@@ -19,13 +18,33 @@ var Game = React.createClass({
 			message: '',
 			userId: '',
 			creatorId: '',
+			boardNum: -1,
 			white: [],
-			black: []
+			black: [],
+			boards: [],
+			pieces: {
+				w: {
+					q: 1,
+					r: 1,
+					b: 1,
+					n: 1,
+					p: 1
+				},
+				
+				b: {
+					q: 1,
+					r: 1,
+					b: 1,
+					n: 1,
+					p: 1
+				},
+			}
 		};
 	},
 	
 	componentDidMount: function () {
 		socket.on('game:move', this._gameMoved);
+		socket.on('game:place', this._gamePlaced);
 		socket.on('game:start', this._gameStart);
 		socket.on('token:invalid', this._tokenInvalid);
 		socket.on('room:full', this._roomFull);
@@ -38,17 +57,61 @@ var Game = React.createClass({
 	},
 	
 	_gameStart: function (data) {
-		this.setState({gameState: 'START'});
+		var boards = [];
+		
+		for (var i = 0; i < data.numOfBoards; i++)
+			boards.push(new Chess());
+		
+		this.setState({
+			gameState: 'START',
+			boardNum: data.boardNum,
+			boards: boards
+		});
 	},
 	
 	_gameMoved: function (data) {
-		this.props.move(data.from, data.to);
-		if (this.props.state.in_checkmate())
-			this.setState({gameState: 'LOST'});
-		else if (this.props.state.in_draw() || 
-				 this.props.state.in_stalemate() ||
-				 this.props.state.in_threefold_repetition())
-			this.setState({gameState: 'DRAWN'})
+		if (this.state.boards[data.boardNum].get(data.to) != null) {
+			var newPieces = this.state.pieces;
+			var piece = this.state.boards[data.boardNum].get(data.to);
+			console.log("INC", piece.color, piece.type);
+			newPieces[piece.color == 'w' ? 'b' : 'w'][piece.type]++;
+			this.setState({pieces: newPieces});
+		}
+		
+		var newBoards = this.state.boards;
+		newBoards[data.boardNum].move({from: data.from, to: data.to, promotion: 'q'});
+		this.setState({boards: newBoards});
+		
+		if (this.state.boardNum == data.boardNum) {
+			if (this.state.boards[this.state.boardNum].in_checkmate()) {
+				this.setState({gameState: 'LOST'});
+			} else if (this.state.boards[this.state.boardNum].in_draw() || 
+					   this.state.boards[this.state.boardNum].in_stalemate() ||
+					   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
+				this.setState({gameState: 'DRAWN'});
+			}
+		}
+	},
+	
+	_gamePlaced: function (data) {
+		var newPieces = this.state.pieces;
+		newPieces[data.color][data.piece]--;
+		this.setState({pieces: newPieces});
+		
+		var newBoards = this.state.boards;
+		newBoards[data.boardNum].put({type: data.piece, color: data.color}, data.pos);
+		this.forceTurn(data.boardNum, data.color == 'b' ? 'w' : 'b');
+		this.setState({boards: newBoards});
+		
+		if (this.state.boardNum == data.boardNum) {
+			if (this.state.boards[this.state.boardNum].in_checkmate()) {
+				this.setState({gameState: 'LOST'});
+			} else if (this.state.boards[this.state.boardNum].in_draw() || 
+					   this.state.boards[this.state.boardNum].in_stalemate() ||
+					   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
+				this.setState({gameState: 'DRAWN'});
+			}
+		}
 	},
 	
 	_tokenInvalid: function () {
@@ -77,18 +140,31 @@ var Game = React.createClass({
 		});
 	},	
 	
-	handleMove: function (from, to) {
-		socket.emit('game:move', {
-			from: from,
-			to: to,
-			token: this.props.token,
-			userId: this.state.userId
-		});
-		if (this.props.state.in_checkmate())
+	handleMove: function (from, to, piece, pos, color) {
+		if (from != null && to != null) {
+			socket.emit('game:move', {
+				from: from,
+				to: to,
+				token: this.props.token,
+				boardNum: this.state.boardNum
+			});
+		} else if (piece != null && pos != null && color != null) {
+			socket.emit('game:place', {
+				piece: piece,
+				pos: pos,
+				color: color,
+				token: this.props.token,
+				boardNum: this.state.boardNum
+			});
+		}
+		
+		var currBoard = this.state.boards[this.state.boardNum];
+		
+		if (currBoard.in_checkmate())
 			this.setState({gameState: 'WON'});
-		else if (this.props.state.in_draw() || 
-				 this.props.state.in_stalemate() ||
-				 this.props.state.in_threefold_repetition())
+		else if (currBoard.in_draw() || 
+				 currBoard.in_stalemate() ||
+				 currBoard.in_threefold_repetition())
 			this.setState({gameState: 'DRAWN'})
 	},
 	
@@ -124,6 +200,14 @@ var Game = React.createClass({
 		return '';
 	},
 	
+	forceTurn: function (boardNum, color) {
+		var newBoards = this.state.boards;
+		var tokens = newBoards[boardNum].fen().split(' ');
+		tokens[1] = color;
+		newBoards[boardNum].load(tokens.join(' '));
+		this.setState({boards: newBoards});
+	},
+	
 	render: function () {
 		var creatorButton = <form onSubmit={this.handlePlay}><input type="submit"/></form>;
 		console.log(this.state.white, this.state.black, this.getColor());
@@ -132,9 +216,7 @@ var Game = React.createClass({
 				<div className="game">
 					<h1>Share this link with your friends: {window.location.href}</h1> 
 					<h1>Your current id is {this.state.userId}</h1>
-					<ReactRedux.Provider store={BoardStore}>
-						<Board color={this.getColor()} onMove={this.handleMove}/>
-					</ReactRedux.Provider>
+					<Board color={this.getColor()} onMove={this.handleMove} board={this.state.boards[this.state.boardNum]} pieces={this.state.pieces}/>
 					<Error message={this.state.message}/>
 				</div>
 			);
@@ -153,7 +235,5 @@ var Game = React.createClass({
 		}
 	}
 });
-
-Game = ReactRedux.connect(BoardState, BoardDispatch)(Game);
 
 module.exports = Game;
