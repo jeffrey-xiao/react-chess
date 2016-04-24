@@ -1,4 +1,4 @@
-var Chess = require('../../lib/chess.min.js').Chess;
+var Chess = require('../../lib/chess.min.js');
 var Redux = require('redux');
 
 var initialState = {

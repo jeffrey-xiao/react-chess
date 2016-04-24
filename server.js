@@ -62,7 +62,6 @@ io.on('connection', function (socket) {
 			return;
 		
 		games = games.updateIn([token, 'white'], function (players) {
-			console.log(players);
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);

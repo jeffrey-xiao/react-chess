@@ -19,7 +19,7 @@ module.exports = React.createClass({
 					(this.props.active ? " active" : "") + 
 					(this.props.possible ? " possible" : "")} 
 				onClick={this.handleClick}>
-				{this.props.piece == '.' ? null : (<img src={"../assets/img/" + this.props.piece + ".svg"}/>)}
+				{this.props.piece == '.' ? null : (<img src={"../app/assets/img/" + this.props.piece + ".svg"}/>)}
 			</div>
 		);
 	}

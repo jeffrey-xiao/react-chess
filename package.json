@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "babel-loader": "^6.2.4",
     "babel-preset-react": "^6.5.0",
     "babelify": "^7.2.0",
     "body-parser": "^1.15.0",
@@ -27,10 +28,10 @@
     "webpack": "^1.13.0"
   },
   "scripts": {
-	"compile": "browserify -t [ babelify --presets [ react ] ] assets/js/main.js -o bundle.js",
+    "compile": "browserify -t [ babelify --presets [ react ] ] assets/js/main.js -o bundle.js",
     "start": "node server",
     "test": "echo \"Error: no test specified\" && exit 1",
-	"watch": "webpack -w"
+    "watch": "webpack -w"
   },
   "repository": {
     "type": "git",

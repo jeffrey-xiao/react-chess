@@ -4,12 +4,12 @@ var marked = require('marked');
 var Redux = require('redux');
 var ReactRedux = require('react-redux');
 var $ = require('jquery');
-var Chess = require('./lib/chess.min.js').Chess;
+var Chess = require('./assets/js/lib/chess.min.js').Chess;
 
-var BoardStore = require('./components/Board/BoardStore.js');
+var BoardStore = require('./assets/js/components/Board/BoardStore.js');
 
-var Game = require('./components/Game/Game.js');
-var GameForm = require('./components/GameForm/GameForm.js');
+var Game = require('./assets/js/components/Game/Game.js');
+var GameForm = require('./assets/js/components/GameForm/GameForm.js');
 
 var token = window.location.href.split('/')[4];
 
