@@ -1,5 +1,5 @@
 {
-  "name": "react-nested-comments",
+  "name": "react-chess",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -35,13 +35,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeffrey-xiao/react-nested-comments.git"
+    "url": "git+https://github.com/jeffrey-xiao/react-chess.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jeffrey-xiao/react-nested-comments/issues"
+    "url": "https://github.com/jeffrey-xiao/react-chess/issues"
   },
-  "homepage": "https://github.com/jeffrey-xiao/react-nested-comments#readme"
+  "homepage": "https://github.com/jeffrey-xiao/react-chess#readme"
 }

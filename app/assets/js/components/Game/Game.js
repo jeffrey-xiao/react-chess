@@ -65,7 +65,6 @@ var Game = React.createClass({
 	},
 	
 	_gameTimeout: function (data) {
-		console.log(data.boardNum, data.color);
 		if (this.state.boardNum == data.boardNum) {
 			if (this.getColor() == data.color)
 				this.setState({gameState: 'LOST', message: 'YOU HAVE LOST'});
@@ -126,7 +125,6 @@ var Game = React.createClass({
 	},
 	
 	_gamePlaced: function (data) {
-		console.log("PLACED ", data.color, data.piece);
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
 		this.setState({boards: newBoards});
@@ -249,6 +247,10 @@ var Game = React.createClass({
 		} else if (this.state.boards[this.state.boardNum].in_draw() || 
 				   this.state.boards[this.state.boardNum].in_stalemate() ||
 				   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
+			console.log(this.state.boards[this.state.boardNum].in_draw());
+			console.log(this.state.boards[this.state.boardNum].in_stalemate());
+			console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
+			console.log(this.state.boards[this.state.boardNum].insufficient_material());
 			this.setState({gameState: 'DRAWN'});
 			socket.emit('game:end', {
 				boardNum: this.state.boardNum,

@@ -112,12 +112,6 @@ io.on('connection', function (socket) {
 		players.delete(socket.id);
 	});
 	
-	socket.on('game:timeUpdate', function (data) {
-		io.to(data.token).emit('game:timeUpdate', {
-			whiteTimes: data.whiteTimes
-		});
-	});
-	
 	socket.on('game:move', function (data) {
 		console.log("BOARD MOVED", data.from, data.to, data.color);
 		
