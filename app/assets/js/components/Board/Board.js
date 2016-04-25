@@ -136,15 +136,17 @@ var Board = React.createClass({
 								  </Square>);
 		}
 		return (
-			<div className="board">
+			<div className="game-board">
 				<PieceSupply 
 					color={this.props.color == 'w' ? 'b' : 'w'} 
 					currColor={this.props.color} 
 					pieces={this.props.pieces[this.props.color == 'w' ? 'b' : 'w']}
 					activePiece={this.state.activePiece}
 					onClick={this.handleSupplyClick}/>
-				{children}
-				<div className="clear"></div>
+				<div className="board">
+					{children}
+					<div className="clear"></div>
+				</div>
 				<PieceSupply 
 					color={this.props.color} 
 					currColor={this.props.color}

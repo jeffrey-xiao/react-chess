@@ -123,16 +123,17 @@ io.on('connection', function (socket) {
 		
 		var piece = null;
 		var color = null;
+		
 		if (games.getIn([data.token, 'boards', data.boardNum]).get(data.to) != null) {
 			piece = games.getIn([data.token, 'boards', data.boardNum]).get(data.to).type;
 			color = games.getIn([data.token, 'boards', data.boardNum]).turn();
 		}
 		
-		games.getIn([data.token, 'boards', data.boardNum]).move({
+		var san = games.getIn([data.token, 'boards', data.boardNum]).move({
 			from: data.from,
 			to: data.to,
 			promotion: 'q'
-		});
+		}).san;
 
 		io.to(data.token).emit('game:move', {
 			from: data.from,
@@ -140,7 +141,8 @@ io.on('connection', function (socket) {
 			boardNum: data.boardNum,
 			fen: games.getIn([data.token, 'boards', data.boardNum]).fen(),
 			piece: piece,
-			color: color
+			color: color,
+			san: san
 		});
 		
 		if (data.color == 'b') {
@@ -163,11 +165,16 @@ io.on('connection', function (socket) {
 			return board;
 		});
 		
+		var san = data.piece + "@" + data.pos;
+		if (games.getIn([data.token, 'boards', data.boardNum]).in_check())
+			san += '+';
+		
 		io.to(data.token).emit('game:place', {
 			piece: data.piece,
 			color: data.color,
 			boardNum: data.boardNum,
-			fen: games.getIn([data.token, 'boards', data.boardNum]).fen()
+			fen: games.getIn([data.token, 'boards', data.boardNum]).fen(),
+			san: san
 		});
 		
 		if (data.color == 'b') {

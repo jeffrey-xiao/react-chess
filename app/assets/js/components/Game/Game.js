@@ -9,6 +9,7 @@ var Board = require('../Board/Board.js');
 var Room = require('../Room/Room.js');
 var Clock = require('../Clock/Clock.js');
 var Modal = require('../Modal/Modal.js');
+var History = require('../History/History.js');
 
 var Chess = require('../../lib/chess.min.js');
 
@@ -26,6 +27,7 @@ var Game = React.createClass({
 			boards: [],
 			whiteTimes: [],
 			blackTimes: [],
+			history: [],
 			pieces: {
 				w: {
 					q: 0,
@@ -113,6 +115,12 @@ var Game = React.createClass({
 			newPieces[data.color][data.piece]++;
 			this.setState({pieces: newPieces});
 		}
+		
+		if (data.boardNum == this.state.boardNum) {
+			var newHistory = this.state.history;
+			newHistory.push(data.san);
+			this.setState({history: newHistory});
+		}
 				
 		this.handleGameover();
 	},
@@ -126,6 +134,12 @@ var Game = React.createClass({
 		var newPieces = this.state.pieces;
 		newPieces[data.color][data.piece]--;
 		this.setState({pieces: newPieces});
+		
+		if (data.boardNum == this.state.boardNum) {
+			var newHistory = this.state.history;
+			newHistory.push(data.san);
+			this.setState({history: newHistory});
+		}
 		
 		this.handleGameover();
 	},
@@ -262,6 +276,8 @@ var Game = React.createClass({
 					</div>
 					<h1>Your current id is {this.state.userId}</h1>
 					<Board color={this.getColor()} onMove={this.handleMove} board={this.state.boards[this.state.boardNum]} pieces={this.state.pieces}/>
+					<History history={this.state.history}/>
+					<div className="clear"></div>
 					<Modal 
 						message={this.state.message}
 						onSubmit={this.clearMessage}/>
@@ -281,9 +297,10 @@ var Game = React.createClass({
 			);
 		} else {
 			return (
+				<div> {this.state.gameState}
 				<Modal 
 					message={this.state.message}
-					onSubmit={this.clearMessage}/>
+					onSubmit={this.clearMessage}/></div>
 			);
 		}
 	}

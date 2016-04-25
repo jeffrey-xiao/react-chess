@@ -1,5 +1,12 @@
 $primary-color: #1e62d0;
 
+$board-width: "(60vw)";
+$max-board-width: "(80vh - 150px)";
+
+@mixin calc($property, $expression) { 
+	#{$property}: calc(#{$expression}); 
+} 
+
 html {
 	width: 100%;
 }
@@ -8,23 +15,75 @@ html {
 	clear: both;
 }
 
+.history {
+	float: left;
+	width: 35vw;
+	max-width: 400px;
+	height: 50vh;
+	background-color: #eee;
+	margin-left: 50px;
+	border-radius: 10px;
+	
+	.history-header {
+		text-align: center;
+		font-size: 26px;
+		font-weight: bold;
+		width: 100%;
+		height: 80px;
+		line-height: 80px;
+		border-bottom: 1px solid #ccc;
+	}
+	
+	.history-body {
+		width: 100%;
+		height: calc(50vh - 80px);
+		overflow-y: auto;
+		text-align: center;
+		font-size: 20px;
+		
+		.history-row {
+			width: 100%;
+			border-bottom: 1px solid #ccc;
+			
+			.number {
+				font-weight: bold;
+				width: 20%;
+				display:inline-block;
+				padding: 10px 0px;
+			}
+			.move {
+				width: calc(40% - 1px);
+				display:inline-block;
+				border-left: 1px solid #ccc;
+				padding: 10px 0px;
+			}
+		}
+	}
+}
+
 .pieceSupplies {
-	width: 600px;
-	height: 50px;
+	@include calc(width, $board-width);
+	@include calc(max-width, $max-board-width);
+	@include calc(height, $board-width + "/10");
+	@include calc(max-height, $max-board-width + "/10");
 	margin: 20px 0px;
 	text-align: center;
 	.pieceSupply {
-		width: 50px;
-		height: 50px;
+		@include calc(width, $board-width + "/10");
+		@include calc(max-width, $max-board-width + "/10");
+		@include calc(height, $board-width + "/10");
+		@include calc(max-height, $max-board-width + "/10");
 		margin: 0px 10px auto;
 		display: inline-block;
 		position: relative;
+		
 		img {
 			width: 100%;
 			height: 100%;
 			border: 1px black solid;
 			border-radius: 5px;
 		}
+		
 		.pieceSupplyCount {
 			position: absolute;
 			top: -10px;
@@ -41,9 +100,16 @@ html {
 	}
 }
 
+.game-board {
+	display: inline-block;
+	float: left;
+}
+
 .board {
-	width: 600px;
-	height: 600px;
+	@include calc(width, $board-width);
+	@include calc(max-width, $max-board-width);
+	@include calc(height, $board-width);
+	@include calc(max-height, $max-board-width);
 
 	.square {
 		display: inline-block;

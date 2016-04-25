@@ -31,7 +31,7 @@ module.exports = {
 		time -= minutes * 60;
 		var seconds = Math.floor(time);
 		time -= seconds;
-		console.log(hours, minutes, seconds);
+
 		if (hours != 0)
 			return hours + ":" + padZero(minutes, 2);
 		else if (minutes != 0)

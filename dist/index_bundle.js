@@ -59,9 +59,9 @@
 	var $ = __webpack_require__(185);
 	var Chess = __webpack_require__(186).Chess;
 
-	var Game = __webpack_require__(188);
+	var Game = __webpack_require__(187);
 	var GameForm = __webpack_require__(197);
-	var PieceSupply = __webpack_require__(198);
+	var PieceSupply = __webpack_require__(191);
 
 	var token = window.location.href.split('/')[4];
 
@@ -32738,21 +32738,21 @@
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
-/* 187 */,
-/* 188 */
+/* 187 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(2);
 	var ReactRedux = __webpack_require__(172);
-	var Immutable = __webpack_require__(189);
+	var Immutable = __webpack_require__(188);
 
 	var List = Immutable.List;
 	var Map = Immutable.Map;
 
-	var Board = __webpack_require__(190);
-	var Room = __webpack_require__(195);
-	var Clock = __webpack_require__(201);
-	var Modal = __webpack_require__(199);
+	var Board = __webpack_require__(189);
+	var Room = __webpack_require__(193);
+	var Clock = __webpack_require__(194);
+	var Modal = __webpack_require__(195);
+	var History = __webpack_require__(196);
 
 	var Chess = __webpack_require__(186);
 
@@ -32772,6 +32772,7 @@
 				boards: [],
 				whiteTimes: [],
 				blackTimes: [],
+				history: [],
 				pieces: {
 					w: {
 						q: 0,
@@ -32854,6 +32855,12 @@
 				this.setState({ pieces: newPieces });
 			}
 
+			if (data.boardNum == this.state.boardNum) {
+				var newHistory = this.state.history;
+				newHistory.push(data.san);
+				this.setState({ history: newHistory });
+			}
+
 			this.handleGameover();
 		},
 
@@ -32866,6 +32873,12 @@
 			var newPieces = this.state.pieces;
 			newPieces[data.color][data.piece]--;
 			this.setState({ pieces: newPieces });
+
+			if (data.boardNum == this.state.boardNum) {
+				var newHistory = this.state.history;
+				newHistory.push(data.san);
+				this.setState({ history: newHistory });
+			}
 
 			this.handleGameover();
 		},
@@ -33009,6 +33022,8 @@
 						this.state.userId
 					),
 					React.createElement(Board, { color: this.getColor(), onMove: this.handleMove, board: this.state.boards[this.state.boardNum], pieces: this.state.pieces }),
+					React.createElement(History, { history: this.state.history }),
+					React.createElement('div', { className: 'clear' }),
 					React.createElement(Modal, {
 						message: this.state.message,
 						onSubmit: this.clearMessage })
@@ -33036,9 +33051,15 @@
 						onSubmit: this.clearMessage })
 				);
 			} else {
-				return React.createElement(Modal, {
-					message: this.state.message,
-					onSubmit: this.clearMessage });
+				return React.createElement(
+					'div',
+					null,
+					' ',
+					this.state.gameState,
+					React.createElement(Modal, {
+						message: this.state.message,
+						onSubmit: this.clearMessage })
+				);
 			}
 		}
 	});
@@ -33046,7 +33067,7 @@
 	module.exports = Game;
 
 /***/ },
-/* 189 */
+/* 188 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -38030,12 +38051,12 @@
 	}));
 
 /***/ },
-/* 190 */
+/* 189 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Square = __webpack_require__(193);
-	var PieceSupply = __webpack_require__(198);
-	var Functions = __webpack_require__(194);
+	var Square = __webpack_require__(190);
+	var PieceSupply = __webpack_require__(191);
+	var Functions = __webpack_require__(192);
 	var Chess = __webpack_require__(186);
 	var React = __webpack_require__(2);
 
@@ -38157,15 +38178,19 @@
 			}
 			return React.createElement(
 				'div',
-				{ className: 'board' },
+				{ className: 'game-board' },
 				React.createElement(PieceSupply, {
 					color: this.props.color == 'w' ? 'b' : 'w',
 					currColor: this.props.color,
 					pieces: this.props.pieces[this.props.color == 'w' ? 'b' : 'w'],
 					activePiece: this.state.activePiece,
 					onClick: this.handleSupplyClick }),
-				children,
-				React.createElement('div', { className: 'clear' }),
+				React.createElement(
+					'div',
+					{ className: 'board' },
+					children,
+					React.createElement('div', { className: 'clear' })
+				),
 				React.createElement(PieceSupply, {
 					color: this.props.color,
 					currColor: this.props.color,
@@ -38179,9 +38204,7 @@
 	module.exports = Board;
 
 /***/ },
-/* 191 */,
-/* 192 */,
-/* 193 */
+/* 190 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(2);
@@ -38211,7 +38234,53 @@
 	});
 
 /***/ },
-/* 194 */
+/* 191 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
+
+	var pieceNames = ['q', 'r', 'b', 'n', 'p'];
+
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+
+		handleClick: function (piece, pieceCount) {
+			if (this.props.currColor == this.props.color && pieceCount > 0) {
+				this.props.onClick(piece);
+			}
+		},
+
+		render: function () {
+
+			var children = [];
+			for (var i = 0; i < pieceNames.length; i++) {
+				children.push(React.createElement(
+					'div',
+					{
+						className: "pieceSupply " + (this.props.color == this.props.currColor && pieceNames[i] == this.props.activePiece ? 'active' : ''),
+						key: this.props.color + pieceNames[i],
+						onClick: this.handleClick.bind(this, pieceNames[i], this.props.pieces[pieceNames[i]]) },
+					React.createElement('img', { src: "../app/assets/img/" + this.props.color + pieceNames[i] + ".svg" }),
+					React.createElement(
+						'div',
+						{ className: 'pieceSupplyCount' },
+						this.props.pieces[pieceNames[i]]
+					)
+				));
+			}
+
+			return React.createElement(
+				'div',
+				{ className: 'pieceSupplies' },
+				children,
+				React.createElement('div', { className: 'clear' })
+			);
+		}
+	});
+
+/***/ },
+/* 192 */
 /***/ function(module, exports) {
 
 	var Base64 = { _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_", encode: function (e) {
@@ -38281,7 +38350,7 @@
 			time -= minutes * 60;
 			var seconds = Math.floor(time);
 			time -= seconds;
-			console.log(hours, minutes, seconds);
+
 			if (hours != 0) return hours + ":" + padZero(minutes, 2);else if (minutes != 0) return minutes + ":" + padZero(seconds, 2);
 			return seconds + "." + time;
 		},
@@ -38290,7 +38359,7 @@
 	};
 
 /***/ },
-/* 195 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(2);
@@ -38363,14 +38432,134 @@
 	module.exports = Room;
 
 /***/ },
-/* 196 */,
+/* 194 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
+	var Functions = __webpack_require__(192);
+
+	var Clock = React.createClass({
+		displayName: 'Clock',
+
+
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: 'clock' },
+				React.createElement(
+					'div',
+					{ className: "white-time " + (this.props.turn == 'w' ? 'active' : '') },
+					Functions.getTime(this.props.whiteTime)
+				),
+				React.createElement(
+					'div',
+					{ className: "black-time " + (this.props.turn == 'b' ? 'active' : '') },
+					Functions.getTime(this.props.blackTime)
+				)
+			);
+		}
+	});
+
+	module.exports = Clock;
+
+/***/ },
+/* 195 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
+
+	var Modal = React.createClass({
+		displayName: 'Modal',
+
+		handleClick: function (e) {
+			e.preventDefault();
+			this.props.onSubmit();
+		},
+
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: "modal " + (this.props.message == '' ? 'active' : '') },
+				React.createElement('div', { className: 'modal-mask' }),
+				React.createElement(
+					'div',
+					{ className: 'modal-box' },
+					React.createElement(
+						'div',
+						{ className: 'modal-message' },
+						this.props.message
+					),
+					React.createElement(
+						'button',
+						{ className: 'button', type: 'button', onClick: this.handleClick },
+						'OK'
+					)
+				)
+			);
+		}
+	});
+
+	module.exports = Modal;
+
+/***/ },
+/* 196 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
+
+	var History = React.createClass({
+		displayName: "History",
+
+		render: function () {
+			var children = [];
+			for (var i = 0; i < this.props.history.length; i += 2) {
+				children.push(React.createElement(
+					"div",
+					{ className: "history-row", key: i },
+					React.createElement(
+						"div",
+						{ className: "number" },
+						Math.floor(i / 2) + 1
+					),
+					React.createElement(
+						"div",
+						{ className: "move" },
+						this.props.history[i]
+					),
+					React.createElement(
+						"div",
+						{ className: "move" },
+						i + 1 < this.props.history.length ? this.props.history[i + 1] : '-'
+					)
+				));
+			}
+			return React.createElement(
+				"div",
+				{ className: "history" },
+				React.createElement(
+					"div",
+					{ className: "history-header" },
+					"Table of Moves"
+				),
+				React.createElement(
+					"div",
+					{ className: "history-body" },
+					children
+				)
+			);
+		}
+	});
+
+	module.exports = History;
+
+/***/ },
 /* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(2);
 	var ReactRedux = __webpack_require__(172);
-	var Functions = __webpack_require__(194);
-	var Modal = __webpack_require__(199);
+	var Functions = __webpack_require__(192);
+	var Modal = __webpack_require__(195);
 	var $ = __webpack_require__(185);
 
 	var GameForm = React.createClass({
@@ -38495,123 +38684,6 @@
 	});
 
 	module.exports = GameForm;
-
-/***/ },
-/* 198 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(2);
-
-	var pieceNames = ['q', 'r', 'b', 'n', 'p'];
-
-	module.exports = React.createClass({
-		displayName: 'exports',
-
-
-		handleClick: function (piece, pieceCount) {
-			if (this.props.currColor == this.props.color && pieceCount > 0) {
-				this.props.onClick(piece);
-			}
-		},
-
-		render: function () {
-
-			var children = [];
-			for (var i = 0; i < pieceNames.length; i++) {
-				children.push(React.createElement(
-					'div',
-					{
-						className: "pieceSupply " + (this.props.color == this.props.currColor && pieceNames[i] == this.props.activePiece ? 'active' : ''),
-						key: this.props.color + pieceNames[i],
-						onClick: this.handleClick.bind(this, pieceNames[i], this.props.pieces[pieceNames[i]]) },
-					React.createElement('img', { src: "../app/assets/img/" + this.props.color + pieceNames[i] + ".svg" }),
-					React.createElement(
-						'div',
-						{ className: 'pieceSupplyCount' },
-						this.props.pieces[pieceNames[i]]
-					)
-				));
-			}
-
-			return React.createElement(
-				'div',
-				{ className: 'pieceSupplies' },
-				children,
-				React.createElement('div', { className: 'clear' })
-			);
-		}
-	});
-
-/***/ },
-/* 199 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(2);
-
-	var Modal = React.createClass({
-		displayName: 'Modal',
-
-		handleClick: function (e) {
-			e.preventDefault();
-			this.props.onSubmit();
-		},
-
-		render: function () {
-			return React.createElement(
-				'div',
-				{ className: "modal " + (this.props.message == '' ? 'active' : '') },
-				React.createElement('div', { className: 'modal-mask' }),
-				React.createElement(
-					'div',
-					{ className: 'modal-box' },
-					React.createElement(
-						'div',
-						{ className: 'modal-message' },
-						this.props.message
-					),
-					React.createElement(
-						'button',
-						{ className: 'button', type: 'button', onClick: this.handleClick },
-						'OK'
-					)
-				)
-			);
-		}
-	});
-
-	module.exports = Modal;
-
-/***/ },
-/* 200 */,
-/* 201 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(2);
-	var Functions = __webpack_require__(194);
-
-	var Clock = React.createClass({
-		displayName: 'Clock',
-
-
-		render: function () {
-			return React.createElement(
-				'div',
-				{ className: 'clock' },
-				React.createElement(
-					'div',
-					{ className: "white-time " + (this.props.turn == 'w' ? 'active' : '') },
-					Functions.getTime(this.props.whiteTime)
-				),
-				React.createElement(
-					'div',
-					{ className: "black-time " + (this.props.turn == 'b' ? 'active' : '') },
-					Functions.getTime(this.props.blackTime)
-				)
-			);
-		}
-	});
-
-	module.exports = Clock;
 
 /***/ }
 /******/ ]);
