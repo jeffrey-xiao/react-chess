@@ -75,8 +75,13 @@ var Board = React.createClass({
 					this.setState({activeRow: row, activeCol: col, activePiece: ''});
 				}
 			} else {
-				var from = activePos;
-				this.props.onMove(from, currPos, null, null, null);
+				var validSquares = [];
+				var validMoves = this.props.board.moves({square: activePos, verbose: true});
+				for (var i = 0; i < validMoves.length; i++)
+					validSquares.push(validMoves[i].to);
+				
+				if (validSquares.indexOf(currPos) > -1)
+					this.props.onMove(activePos, currPos, null, null, this.props.color);
 				this.setState({activeRow: -1, activeCol: -1});
 			}
 		}

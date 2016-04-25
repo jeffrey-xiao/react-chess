@@ -10,6 +10,9 @@ var Immutable = require('immutable');
 var Map = Immutable.Map;
 var List = Immutable.List;
 
+var Timer = require('./app/assets/js/lib/timer');
+var Chess = require('./app/assets/js/lib/chess.min.js').Chess;
+
 var hostname = 'localhost';
 var port = 8080;
 
@@ -59,6 +62,7 @@ io.on('connection', function (socket) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
+					break;
 				}
 			}
 			return players;
@@ -68,6 +72,7 @@ io.on('connection', function (socket) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
+					break;
 				}
 			}
 			return players;
@@ -88,6 +93,18 @@ io.on('connection', function (socket) {
 		});
 		
 		if (games.getIn([token, 'creator']) != null && games.getIn([token, 'creator']).id == socket.id) {
+			games = games.updateIn([token, 'blackTimers'], function (list) {
+				for (var i = 0; i < list.size; i++)
+					list.get(i).stop();
+				return list;
+			});
+			
+			games = games.updateIn([token, 'whiteTimers'], function (list) {
+				for (var i = 0; i < list.size; i++)
+					list.get(i).stop();
+				return list;
+			});
+			
 			games = games.delete(token);
 			io.to(token).emit('token:invalid');
 		}
@@ -95,24 +112,79 @@ io.on('connection', function (socket) {
 		players.delete(socket.id);
 	});
 	
+	socket.on('game:timeUpdate', function (data) {
+		io.to(data.token).emit('game:timeUpdate', {
+			whiteTimes: data.whiteTimes
+		});
+	});
+	
 	socket.on('game:move', function (data) {
-		console.log("BOARD MOVED", data.from, data.to);
+		console.log("BOARD MOVED", data.from, data.to, data.color);
 		
+		var piece = null;
+		var color = null;
+		if (games.getIn([data.token, 'boards', data.boardNum]).get(data.to) != null) {
+			piece = games.getIn([data.token, 'boards', data.boardNum]).get(data.to).type;
+			color = games.getIn([data.token, 'boards', data.boardNum]).turn();
+		}
+		
+		games.getIn([data.token, 'boards', data.boardNum]).move({
+			from: data.from,
+			to: data.to,
+			promotion: 'q'
+		});
+
 		io.to(data.token).emit('game:move', {
 			from: data.from,
 			to: data.to,
-			boardNum: data.boardNum
+			boardNum: data.boardNum,
+			fen: games.getIn([data.token, 'boards', data.boardNum]).fen(),
+			piece: piece,
+			color: color
 		});
+		
+		if (data.color == 'b') {
+			games.getIn([data.token, 'whiteTimers', data.boardNum]).start();
+			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
+		} else if (data.color == 'w') {
+			games.getIn([data.token, 'blackTimers', data.boardNum]).start();
+			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
+		}
 	});
 	
 	socket.on('game:place', function (data) {
 		console.log("BOARD PLACED", data.piece, data.pos, data.color);
+		
+		games = games.updateIn([data.token, 'boards', data.boardNum], function (board) {
+			board.put({type: data.piece, color: data.color}, data.pos);
+			var tokens = board.fen().split(" ");
+			tokens[1] = data.color == 'b' ? 'w' : 'b';
+			board = new Chess(tokens.join(" "));
+			return board;
+		});
+		
 		io.to(data.token).emit('game:place', {
 			piece: data.piece,
-			pos: data.pos,
 			color: data.color,
-			boardNum: data.boardNum
+			boardNum: data.boardNum,
+			fen: games.getIn([data.token, 'boards', data.boardNum]).fen()
 		});
+		
+		if (data.color == 'b') {
+			games.getIn([data.token, 'whiteTimers', data.boardNum]).start();
+			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
+		} else if (data.color == 'w') {
+			games.getIn([data.token, 'blackTimers', data.boardNum]).start();
+			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
+		}
+	});
+	
+	socket.on('game:end', function (data) {
+		console.log(data.token, data.boardNum)
+		if (games.getIn([data.token, 'whiteTimers', data.boardNum]) != null)
+			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
+		if (games.getIn([data.token, 'blackTimers', data.boardNum]) != null)
+			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
 	});
 	
 	socket.on('game:start', function (data) {
@@ -120,10 +192,59 @@ io.on('connection', function (socket) {
 		var numOfBoards = games.getIn([data.token, 'white']).size;
 		
 		var game = games.get(data.token);
+		var time = game.get('time');
+		var inc = game.get('inc');
 		
 		for (var i = 0; i < game.get('white').size; i++) {
-			game.get('white').get(i).emit('game:start', {boardNum: i, numOfBoards: numOfBoards});
-			game.get('black').get(i).emit('game:start', {boardNum: i, numOfBoards: numOfBoards});
+			game.get('white').get(i).emit('game:start', {
+				boardNum: i, 
+				numOfBoards: numOfBoards,
+				time: time,
+				inc: inc
+			});
+			game.get('black').get(i).emit('game:start', {
+				boardNum: i, 
+				numOfBoards: numOfBoards,
+				time: time,
+				inc: inc
+			});
+			
+			games = games.updateIn([data.token, 'whiteTimers'], function (list) {
+				list = list.push(new Timer(time, inc, i, function (time, boardNum) {
+					io.to(data.token).emit('game:timeupdate', {
+						boardNum: boardNum,
+						color: 'w',
+						time: time
+					});
+				}, function (boardNum) {
+					io.to(data.token).emit('game:timeout', {
+						boardNum: boardNum,
+						color: 'w'
+					});
+				}));
+				return list;
+			});
+			
+			games = games.updateIn([data.token, 'blackTimers'], function (list) {
+				list = list.push(new Timer(time, inc, i, function (time, boardNum) {
+					io.to(data.token).emit('game:timeupdate', {
+						boardNum: boardNum,
+						color: 'b',
+						time: time
+					});
+				}, function (boardNum) {
+					io.to(data.token).emit('game:timeout', {
+						boardNum: boardNum,
+						color: 'b'
+					});
+				}));
+				return list;
+			});
+			
+			games = games.updateIn([data.token, 'boards'], function (list) {
+				list = list.push(new Chess());
+				return list;
+			});
 		}
 		
 		clearTimeout(games.getIn([data.token, 'timeout']));
@@ -140,8 +261,14 @@ io.on('connection', function (socket) {
 		
 		games = games.set(data.token, Map({
 			creator: null,
+			time: data.time,
+			inc: data.inc,
+			roomSize: data.teamSize * 2,
 			white: List(),
 			black: List(),
+			whiteTimers: List(),
+			blackTimers: List(),
+			boards: List(),
 			timeout: timeout
 		}));
 		
@@ -159,13 +286,13 @@ io.on('connection', function (socket) {
 
 		var playerCnt = game.get('white').size + game.get('black').size;
 		
-		/*
-		if (playerCnt >= 2) {
+		console.log("PLAYERCNT", playerCnt, "ROOM SIZE", game.get('roomSize'))
+		
+		if (playerCnt >= game.get('roomSize')) {
 			console.log("Room is full");
 			socket.emit('room:full');
 			return;
 		}
-		*/
 		
 		console.log("Actually joining with socket");
 		socket.join(data.token);

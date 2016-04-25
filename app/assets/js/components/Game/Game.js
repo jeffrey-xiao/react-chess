@@ -7,7 +7,8 @@ var Map = Immutable.Map;
 
 var Board = require('../Board/Board.js');
 var Room = require('../Room/Room.js');
-var Error = require('../Error/Error.js');
+var Clock = require('../Clock/Clock.js');
+var Modal = require('../Modal/Modal.js');
 
 var Chess = require('../../lib/chess.min.js');
 
@@ -15,6 +16,7 @@ var Game = React.createClass({
 	getInitialState: function () {
 		return {
 			gameState: 'WAITING',
+			gameType: '',
 			message: '',
 			userId: '',
 			creatorId: '',
@@ -22,21 +24,23 @@ var Game = React.createClass({
 			white: [],
 			black: [],
 			boards: [],
+			whiteTimes: [],
+			blackTimes: [],
 			pieces: {
 				w: {
-					q: 1,
-					r: 1,
-					b: 1,
-					n: 1,
-					p: 1
+					q: 0,
+					r: 0,
+					b: 0,
+					n: 0,
+					p: 0
 				},
 				
 				b: {
-					q: 1,
-					r: 1,
-					b: 1,
-					n: 1,
-					p: 1
+					q: 0,
+					r: 0,
+					b: 0,
+					n: 0,
+					p: 0
 				},
 			}
 		};
@@ -50,68 +54,80 @@ var Game = React.createClass({
 		socket.on('room:full', this._roomFull);
 		socket.on('room:enter', this._roomEnter);
 		socket.on('room:update', this._roomUpdate);
+		socket.on('game:timeupdate', this._gameTimeupdate);
+		socket.on('game:timeout', this._gameTimeout);
 		
 		socket.emit('room:join', {
 			token: this.props.token
 		});
 	},
 	
+	_gameTimeout: function (data) {
+		console.log(data.boardNum, data.color);
+		if (this.state.boardNum == data.boardNum) {
+			if (this.getColor() == data.color)
+				this.setState({gameState: 'LOST', message: 'YOU HAVE LOST'});
+			else
+				this.setState({gameState: 'WON', message: 'YOU HAVE WON'});
+		}
+	},
+	
+	_gameTimeupdate: function (data) {
+		var newWhiteTimes = this.state.whiteTimes;
+		var newBlackTimes = this.state.blackTimes;
+		
+		if (data.color == 'b')
+			newBlackTimes[data.boardNum] = data.time;
+		else
+			newWhiteTimes[data.boardNum] = data.time;
+		
+		this.setState({blackTimes: newBlackTimes, whiteTimes: newWhiteTimes});
+	},
+	
 	_gameStart: function (data) {
 		var boards = [];
-		
-		for (var i = 0; i < data.numOfBoards; i++)
+		var whiteTimes = [];
+		var blackTimes = [];
+		for (var i = 0; i < data.numOfBoards; i++) {
 			boards.push(new Chess());
+			whiteTimes.push(data.time);
+			blackTimes.push(data.time);
+		}
 		
 		this.setState({
 			gameState: 'START',
 			boardNum: data.boardNum,
-			boards: boards
+			boards: boards,
+			whiteTimes: whiteTimes,
+			blackTimes: blackTimes
 		});
 	},
 	
 	_gameMoved: function (data) {
-		if (this.state.boards[data.boardNum].get(data.to) != null) {
-			var newPieces = this.state.pieces;
-			var piece = this.state.boards[data.boardNum].get(data.to);
-			console.log("INC", piece.color, piece.type);
-			newPieces[piece.color == 'w' ? 'b' : 'w'][piece.type]++;
-			this.setState({pieces: newPieces});
-		}
-		
 		var newBoards = this.state.boards;
-		newBoards[data.boardNum].move({from: data.from, to: data.to, promotion: 'q'});
+		newBoards[data.boardNum] = new Chess(data.fen);
 		this.setState({boards: newBoards});
 		
-		if (this.state.boardNum == data.boardNum) {
-			if (this.state.boards[this.state.boardNum].in_checkmate()) {
-				this.setState({gameState: 'LOST'});
-			} else if (this.state.boards[this.state.boardNum].in_draw() || 
-					   this.state.boards[this.state.boardNum].in_stalemate() ||
-					   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
-				this.setState({gameState: 'DRAWN'});
-			}
+		if (data.piece != null) {
+			var newPieces = this.state.pieces;
+			newPieces[data.color][data.piece]++;
+			this.setState({pieces: newPieces});
 		}
+				
+		this.handleGameover();
 	},
 	
 	_gamePlaced: function (data) {
+		console.log("PLACED ", data.color, data.piece);
+		var newBoards = this.state.boards;
+		newBoards[data.boardNum] = new Chess(data.fen);
+		this.setState({boards: newBoards});
+		
 		var newPieces = this.state.pieces;
 		newPieces[data.color][data.piece]--;
 		this.setState({pieces: newPieces});
 		
-		var newBoards = this.state.boards;
-		newBoards[data.boardNum].put({type: data.piece, color: data.color}, data.pos);
-		this.forceTurn(data.boardNum, data.color == 'b' ? 'w' : 'b');
-		this.setState({boards: newBoards});
-		
-		if (this.state.boardNum == data.boardNum) {
-			if (this.state.boards[this.state.boardNum].in_checkmate()) {
-				this.setState({gameState: 'LOST'});
-			} else if (this.state.boards[this.state.boardNum].in_draw() || 
-					   this.state.boards[this.state.boardNum].in_stalemate() ||
-					   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
-				this.setState({gameState: 'DRAWN'});
-			}
-		}
+		this.handleGameover();
 	},
 	
 	_tokenInvalid: function () {
@@ -119,7 +135,7 @@ var Game = React.createClass({
 	},
 	
 	_roomFull: function () {
-		this.setState({message: 'THIS ROOM IS FULL'});
+		this.setState({message: 'This room is full!', gameState: 'FULL'});
 	},
 	
 	_roomEnter: function (data) {
@@ -132,8 +148,14 @@ var Game = React.createClass({
 	
 	_roomUpdate: function (data) {
 		console.log("Updated room");
-		if (this.state.gameState == 'START')
+		if (this.state.gameState == 'START') {
 			this.setState({gameState: 'DISCONNECTED'});
+			socket.emit('game:end', {
+				boardNum: this.state.boardNum,
+				token: this.props.token
+			});
+		}
+		
 		this.setState({
 			white: data.white,
 			black: data.black
@@ -145,6 +167,7 @@ var Game = React.createClass({
 			socket.emit('game:move', {
 				from: from,
 				to: to,
+				color: color,
 				token: this.props.token,
 				boardNum: this.state.boardNum
 			});
@@ -157,15 +180,6 @@ var Game = React.createClass({
 				boardNum: this.state.boardNum
 			});
 		}
-		
-		var currBoard = this.state.boards[this.state.boardNum];
-		
-		if (currBoard.in_checkmate())
-			this.setState({gameState: 'WON'});
-		else if (currBoard.in_draw() || 
-				 currBoard.in_stalemate() ||
-				 currBoard.in_threefold_repetition())
-			this.setState({gameState: 'DRAWN'})
 	},
 	
 	handleSubmit: function (newColor) {
@@ -208,30 +222,69 @@ var Game = React.createClass({
 		this.setState({boards: newBoards});
 	},
 	
+	handleGameover: function () {
+		if (this.state.boards[this.state.boardNum].in_checkmate()) {
+			if (this.state.boards[this.state.boardNum].turn() == this.getColor())
+				this.setState({gameState: 'LOST'});
+			else
+				this.setState({gameState: 'WON'});
+			socket.emit('game:end', {
+				boardNum: this.state.boardNum,
+				token: this.props.token
+			});
+		} else if (this.state.boards[this.state.boardNum].in_draw() || 
+				   this.state.boards[this.state.boardNum].in_stalemate() ||
+				   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
+			this.setState({gameState: 'DRAWN'});
+			socket.emit('game:end', {
+				boardNum: this.state.boardNum,
+				token: this.props.token
+			});
+		}
+	},
+	
+	clearMessage: function () {
+		this.setState({message: ''});
+	},
+	
 	render: function () {
 		var creatorButton = <form onSubmit={this.handlePlay}><input type="submit"/></form>;
-		console.log(this.state.white, this.state.black, this.getColor());
 		if (this.state.gameState == 'START') {
 			return (
 				<div className="game">
-					<h1>Share this link with your friends: {window.location.href}</h1> 
+					<div className="game-header">
+						<Clock 
+							whiteTime={this.state.whiteTimes[this.state.boardNum]}
+							blackTime={this.state.blackTimes[this.state.boardNum]}
+							turn={this.state.boards[this.state.boardNum].turn()}/>
+						<a className="button new-game" href="/" target="_blank">New Game</a>
+						<div className="clear"></div>
+					</div>
 					<h1>Your current id is {this.state.userId}</h1>
 					<Board color={this.getColor()} onMove={this.handleMove} board={this.state.boards[this.state.boardNum]} pieces={this.state.pieces}/>
-					<Error message={this.state.message}/>
+					<Modal 
+						message={this.state.message}
+						onSubmit={this.clearMessage}/>
 				</div>
 			);
 		} else if (this.state.gameState == 'WAITING') {
 			return (
 				<div className="game">
-					<h1>Share this link with your friends: {window.location.href}</h1>
+					<h1>Share this link with your friends: {window.location.href}</h1> 
 					<h1>Your current id is {this.state.userId}</h1>
 					<Room white={this.state.white} black={this.state.black} onSubmit={this.handleSubmit}/>
 					{this.state.userId == this.state.creatorId ? creatorButton : ""}
-					<Error message={this.state.message}/>
+					<Modal 
+						message={this.state.message}
+						onSubmit={this.clearMessage}/>
 				</div>
 			);
 		} else {
-			return (<h1>{this.state.gameState}</h1>);
+			return (
+				<Modal 
+					message={this.state.message}
+					onSubmit={this.clearMessage}/>
+			);
 		}
 	}
 });
