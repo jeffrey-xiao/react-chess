@@ -19,7 +19,8 @@ var Game = React.createClass({
 		return {
 			gameState: 'WAITING',
 			gameType: '',
-			message: '',
+			modalMessage: '',
+			modalCallback: this.clearModalMessage, 
 			userId: '',
 			creatorId: '',
 			boardNum: -1,
@@ -70,9 +71,9 @@ var Game = React.createClass({
 	_gameTimeout: function (data) {
 		if (this.state.boardNum == data.boardNum) {
 			if (this.getColor() == data.color)
-				this.setState({gameState: 'LOST', message: 'YOU HAVE LOST'});
+				this.setState({gameState: 'STOP', modalMessage: 'You have lost!'});
 			else
-				this.setState({gameState: 'WON', message: 'YOU HAVE WON'});
+				this.setState({gameState: 'STOP', modalMessage: 'You have won!'});
 		}
 	},
 	
@@ -155,12 +156,27 @@ var Game = React.createClass({
 		this.handleGameover();
 	},
 	
-	_tokenInvalid: function () {
-		this.setState({message: 'THIS TOKEN IS INVALID'});
+	_tokenInvalid: function (data) {
+		var clearModalMessage = this.clearModalMessage;
+		this.setState({
+			modalMessage: 'This token is invalid: ' + data.message,
+			modalCallback: function () {
+				clearModalMessage();
+				window.location.href = "/";
+			}
+		});
 	},
 	
 	_roomFull: function () {
-		this.setState({message: 'This room is full!', gameState: 'FULL'});
+		var clearModalMessage = this.clearModalMessage;	
+		this.setState({
+			modalMessage: 'This room is full!', 
+			gameState: 'FULL',
+			modalCallback: function () {
+				clearModalMessage();
+				window.location.href = "/";
+			}
+		});
 	},
 	
 	_roomEnter: function (data) {
@@ -174,7 +190,11 @@ var Game = React.createClass({
 	_roomUpdate: function (data) {
 		console.log("Updated room");
 		if (this.state.gameState == 'START') {
-			this.setState({gameState: 'DISCONNECTED'});
+			this.setState({
+				gameState: 'STOP',
+				modalMessage: 'Your opponent has disconnected!'
+			});
+			
 			socket.emit('game:end', {
 				boardNum: this.state.boardNum,
 				token: this.props.token
@@ -218,14 +238,15 @@ var Game = React.createClass({
 	handlePlay: function (e) {
 		e.preventDefault();
 		if (this.state.white.length != this.state.black.length) {
-			this.setState({message: 'Teams must be of equal size!'});
+			this.setState({modalMessage: 'Teams must be of equal size!'});
 			return;
 		}
 		
 		socket.emit('game:start', {
 			token: this.props.token
 		});
-		this.setState({message: ''});
+		
+		this.clearModalMessage();
 	},
 	
 	getColor: function () {
@@ -250,13 +271,22 @@ var Game = React.createClass({
 	handleGameover: function () {
 		if (this.state.boards[this.state.boardNum].in_checkmate()) {
 			if (this.state.boards[this.state.boardNum].turn() == this.getColor())
-				this.setState({gameState: 'LOST'});
-			else
-				this.setState({gameState: 'WON'});
+				this.setState({
+					gameState: 'STOP',
+					modalMessage: 'You have lost!'
+				});
+			else {
+				this.setState({
+					gameState: 'STOP',
+					modalMessage: 'You have won!'
+				});
+			}
+			
 			socket.emit('game:end', {
 				boardNum: this.state.boardNum,
 				token: this.props.token
 			});
+			
 		} else if (this.state.boards[this.state.boardNum].in_draw() || 
 				   this.state.boards[this.state.boardNum].in_stalemate() ||
 				   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
@@ -264,16 +294,17 @@ var Game = React.createClass({
 			console.log(this.state.boards[this.state.boardNum].in_stalemate());
 			console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
 			console.log(this.state.boards[this.state.boardNum].insufficient_material());
-			this.setState({gameState: 'DRAWN'});
+			
+			this.setState({
+				gameState: 'STOP',
+				modalMessage: 'Game was drawn!'
+			});
+			
 			socket.emit('game:end', {
 				boardNum: this.state.boardNum,
 				token: this.props.token
 			});
 		}
-	},
-	
-	clearMessage: function () {
-		this.setState({message: ''});
 	},
 	
 	sendChatMessage: function (body) {
@@ -284,9 +315,13 @@ var Game = React.createClass({
 		});
 	},
 	
+	clearModalMessage: function () {
+		this.setState({modalMessage: ''});
+	},
+	
 	render: function () {
 		var creatorButton = <form onSubmit={this.handlePlay}><input type="submit"/></form>;
-		if (this.state.gameState == 'START') {
+		if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 			return (
 				<div className="game">
 					<div className="game-header">
@@ -302,7 +337,8 @@ var Game = React.createClass({
 						<Board color={this.getColor()} 
 							onMove={this.handleMove} 
 							board={this.state.boards[this.state.boardNum]} 
-							pieces={this.state.pieces}/>
+							pieces={this.state.pieces}
+							gameState={this.state.gameState}/>
 					</div>
 					<div className="col">
 						<History history={this.state.history}/>
@@ -312,8 +348,8 @@ var Game = React.createClass({
 							userId={this.state.userId}/>
 					</div>
 					<Modal 
-						message={this.state.message}
-						onSubmit={this.clearMessage}/>
+						message={this.state.modalMessage}
+						onSubmit={this.state.modalCallback}/>
 				</div>
 			);
 		} else if (this.state.gameState == 'WAITING') {
@@ -324,16 +360,15 @@ var Game = React.createClass({
 					<Room white={this.state.white} black={this.state.black} onSubmit={this.handleSubmit}/>
 					{this.state.userId == this.state.creatorId ? creatorButton : ""}
 					<Modal 
-						message={this.state.message}
-						onSubmit={this.clearMessage}/>
+						message={this.state.modalMessage}
+						onSubmit={this.state.modalCallback}/>
 				</div>
 			);
 		} else {
 			return (
-				<div> {this.state.gameState}
 				<Modal 
-					message={this.state.message}
-					onSubmit={this.clearMessage}/></div>
+					message={this.state.modalMessage}
+					onSubmit={this.state.modalCallback}/>
 			);
 		}
 	}

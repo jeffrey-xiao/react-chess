@@ -53,6 +53,8 @@ var Board = React.createClass({
 	},
 	
 	handleSquareClick: function (row, col) {
+		if (this.props.gameState != 'START')
+			return;
 		
 		var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
 		var currPos = Functions.toCode(row, col);
@@ -88,6 +90,9 @@ var Board = React.createClass({
 	},
 	
 	handleSupplyClick: function (piece) {
+		if (this.props.gameState != 'START')
+			return;
+		
 		if (this.state.activePiece == piece) {
 			this.setState({activePiece: ''});
 		} else {

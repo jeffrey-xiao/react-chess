@@ -106,7 +106,7 @@ io.on('connection', function (socket) {
 			});
 			
 			games = games.delete(token);
-			io.to(token).emit('token:invalid');
+			io.to(token).emit('token:invalid', {message: 'Owner has left the room!'});
 		}
 		
 		players.delete(socket.id);
@@ -266,7 +266,7 @@ io.on('connection', function (socket) {
 		var timeout = setTimeout(function () {
 			console.log("TOKEN IS INVALID NOW");
 			games = games.delete(data.token);
-			io.to(data.token).emit('token:invalid');
+			io.to(data.token).emit('token:invalid', {message: 'The room has expired!'});
 		}, 60 * 1000 * 20);
 		
 		games = games.set(data.token, Map({
@@ -290,7 +290,7 @@ io.on('connection', function (socket) {
 		var game = games.get(data.token);
 		
 		if (!game) {
-			socket.emit('token:invalid');
+			socket.emit('token:invalid', {message: 'The room does not exist!'});
 			return;
 		}
 

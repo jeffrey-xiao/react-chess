@@ -32764,7 +32764,8 @@
 			return {
 				gameState: 'WAITING',
 				gameType: '',
-				message: '',
+				modalMessage: '',
+				modalCallback: this.clearModalMessage,
 				userId: '',
 				creatorId: '',
 				boardNum: -1,
@@ -32814,7 +32815,7 @@
 
 		_gameTimeout: function (data) {
 			if (this.state.boardNum == data.boardNum) {
-				if (this.getColor() == data.color) this.setState({ gameState: 'LOST', message: 'YOU HAVE LOST' });else this.setState({ gameState: 'WON', message: 'YOU HAVE WON' });
+				if (this.getColor() == data.color) this.setState({ gameState: 'STOP', modalMessage: 'You have lost!' });else this.setState({ gameState: 'STOP', modalMessage: 'You have won!' });
 			}
 		},
 
@@ -32894,12 +32895,27 @@
 			this.handleGameover();
 		},
 
-		_tokenInvalid: function () {
-			this.setState({ message: 'THIS TOKEN IS INVALID' });
+		_tokenInvalid: function (data) {
+			var clearModalMessage = this.clearModalMessage;
+			this.setState({
+				modalMessage: 'This token is invalid: ' + data.message,
+				modalCallback: function () {
+					clearModalMessage();
+					window.location.href = "/";
+				}
+			});
 		},
 
 		_roomFull: function () {
-			this.setState({ message: 'This room is full!', gameState: 'FULL' });
+			var clearModalMessage = this.clearModalMessage;
+			this.setState({
+				modalMessage: 'This room is full!',
+				gameState: 'FULL',
+				modalCallback: function () {
+					clearModalMessage();
+					window.location.href = "/";
+				}
+			});
 		},
 
 		_roomEnter: function (data) {
@@ -32913,7 +32929,11 @@
 		_roomUpdate: function (data) {
 			console.log("Updated room");
 			if (this.state.gameState == 'START') {
-				this.setState({ gameState: 'DISCONNECTED' });
+				this.setState({
+					gameState: 'STOP',
+					modalMessage: 'Your opponent has disconnected!'
+				});
+
 				socket.emit('game:end', {
 					boardNum: this.state.boardNum,
 					token: this.props.token
@@ -32957,14 +32977,15 @@
 		handlePlay: function (e) {
 			e.preventDefault();
 			if (this.state.white.length != this.state.black.length) {
-				this.setState({ message: 'Teams must be of equal size!' });
+				this.setState({ modalMessage: 'Teams must be of equal size!' });
 				return;
 			}
 
 			socket.emit('game:start', {
 				token: this.props.token
 			});
-			this.setState({ message: '' });
+
+			this.clearModalMessage();
 		},
 
 		getColor: function () {
@@ -32984,7 +33005,16 @@
 
 		handleGameover: function () {
 			if (this.state.boards[this.state.boardNum].in_checkmate()) {
-				if (this.state.boards[this.state.boardNum].turn() == this.getColor()) this.setState({ gameState: 'LOST' });else this.setState({ gameState: 'WON' });
+				if (this.state.boards[this.state.boardNum].turn() == this.getColor()) this.setState({
+					gameState: 'STOP',
+					modalMessage: 'You have lost!'
+				});else {
+					this.setState({
+						gameState: 'STOP',
+						modalMessage: 'You have won!'
+					});
+				}
+
 				socket.emit('game:end', {
 					boardNum: this.state.boardNum,
 					token: this.props.token
@@ -32994,16 +33024,17 @@
 				console.log(this.state.boards[this.state.boardNum].in_stalemate());
 				console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
 				console.log(this.state.boards[this.state.boardNum].insufficient_material());
-				this.setState({ gameState: 'DRAWN' });
+
+				this.setState({
+					gameState: 'STOP',
+					modalMessage: 'Game was drawn!'
+				});
+
 				socket.emit('game:end', {
 					boardNum: this.state.boardNum,
 					token: this.props.token
 				});
 			}
-		},
-
-		clearMessage: function () {
-			this.setState({ message: '' });
 		},
 
 		sendChatMessage: function (body) {
@@ -33014,13 +33045,17 @@
 			});
 		},
 
+		clearModalMessage: function () {
+			this.setState({ modalMessage: '' });
+		},
+
 		render: function () {
 			var creatorButton = React.createElement(
 				'form',
 				{ onSubmit: this.handlePlay },
 				React.createElement('input', { type: 'submit' })
 			);
-			if (this.state.gameState == 'START') {
+			if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 				return React.createElement(
 					'div',
 					{ className: 'game' },
@@ -33050,7 +33085,8 @@
 						React.createElement(Board, { color: this.getColor(),
 							onMove: this.handleMove,
 							board: this.state.boards[this.state.boardNum],
-							pieces: this.state.pieces })
+							pieces: this.state.pieces,
+							gameState: this.state.gameState })
 					),
 					React.createElement(
 						'div',
@@ -33062,8 +33098,8 @@
 							userId: this.state.userId })
 					),
 					React.createElement(Modal, {
-						message: this.state.message,
-						onSubmit: this.clearMessage })
+						message: this.state.modalMessage,
+						onSubmit: this.state.modalCallback })
 				);
 			} else if (this.state.gameState == 'WAITING') {
 				return React.createElement(
@@ -33084,19 +33120,13 @@
 					React.createElement(Room, { white: this.state.white, black: this.state.black, onSubmit: this.handleSubmit }),
 					this.state.userId == this.state.creatorId ? creatorButton : "",
 					React.createElement(Modal, {
-						message: this.state.message,
-						onSubmit: this.clearMessage })
+						message: this.state.modalMessage,
+						onSubmit: this.state.modalCallback })
 				);
 			} else {
-				return React.createElement(
-					'div',
-					null,
-					' ',
-					this.state.gameState,
-					React.createElement(Modal, {
-						message: this.state.message,
-						onSubmit: this.clearMessage })
-				);
+				return React.createElement(Modal, {
+					message: this.state.modalMessage,
+					onSubmit: this.state.modalCallback });
 			}
 		}
 	});
@@ -38145,6 +38175,7 @@
 		},
 
 		handleSquareClick: function (row, col) {
+			if (this.props.gameState != 'START') return;
 
 			var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
 			var currPos = Functions.toCode(row, col);
@@ -38176,6 +38207,8 @@
 		},
 
 		handleSupplyClick: function (piece) {
+			if (this.props.gameState != 'START') return;
+
 			if (this.state.activePiece == piece) {
 				this.setState({ activePiece: '' });
 			} else {
