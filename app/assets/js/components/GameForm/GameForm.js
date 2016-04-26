@@ -1,7 +1,8 @@
 var React = require('react');
 var ReactRedux = require('react-redux');
-var Functions = require('../../lib/Functions.js');
+var Functions = require('../../lib/functions.js');
 var Modal = require('../Modal/Modal.js');
+var Chat = require('../Chat/Chat.js');
 var $ = require('jquery');
 
 var GameForm = React.createClass({

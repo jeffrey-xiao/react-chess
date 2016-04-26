@@ -10,6 +10,7 @@ var Room = require('../Room/Room.js');
 var Clock = require('../Clock/Clock.js');
 var Modal = require('../Modal/Modal.js');
 var History = require('../History/History.js');
+var Chat = require('../Chat/Chat.js');
 
 var Chess = require('../../lib/chess.min.js');
 
@@ -44,7 +45,8 @@ var Game = React.createClass({
 					n: 0,
 					p: 0
 				},
-			}
+			},
+			messages: []
 		};
 	},
 	
@@ -58,6 +60,7 @@ var Game = React.createClass({
 		socket.on('room:update', this._roomUpdate);
 		socket.on('game:timeupdate', this._gameTimeupdate);
 		socket.on('game:timeout', this._gameTimeout);
+		socket.on('chat:receive', this._chatReceive);
 		
 		socket.emit('room:join', {
 			token: this.props.token
@@ -71,6 +74,16 @@ var Game = React.createClass({
 			else
 				this.setState({gameState: 'WON', message: 'YOU HAVE WON'});
 		}
+	},
+	
+	_chatReceive: function (data) {
+		var newMessages = this.state.messages;
+		newMessages.push({
+			author: data.author,
+			time: data.time,
+			body: data.body
+		});
+		this.setState({messages: newMessages});
 	},
 	
 	_gameTimeupdate: function (data) {
@@ -263,6 +276,14 @@ var Game = React.createClass({
 		this.setState({message: ''});
 	},
 	
+	sendChatMessage: function (body) {
+		socket.emit('chat:send', {
+			author: this.state.userId,
+			body: body,
+			token: this.props.token
+		});
+	},
+	
 	render: function () {
 		var creatorButton = <form onSubmit={this.handlePlay}><input type="submit"/></form>;
 		if (this.state.gameState == 'START') {
@@ -276,10 +297,20 @@ var Game = React.createClass({
 						<a className="button new-game" href="/" target="_blank">New Game</a>
 						<div className="clear"></div>
 					</div>
-					<h1>Your current id is {this.state.userId}</h1>
-					<Board color={this.getColor()} onMove={this.handleMove} board={this.state.boards[this.state.boardNum]} pieces={this.state.pieces}/>
-					<History history={this.state.history}/>
-					<div className="clear"></div>
+					<h3>Your current id is {this.state.userId}</h3>
+					<div className="col">
+						<Board color={this.getColor()} 
+							onMove={this.handleMove} 
+							board={this.state.boards[this.state.boardNum]} 
+							pieces={this.state.pieces}/>
+					</div>
+					<div className="col">
+						<History history={this.state.history}/>
+						<Chat 
+							messages={this.state.messages}
+							onSubmit={this.sendChatMessage}
+							userId={this.state.userId}/>
+					</div>
 					<Modal 
 						message={this.state.message}
 						onSubmit={this.clearMessage}/>

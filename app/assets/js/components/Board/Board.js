@@ -1,6 +1,6 @@
 var Square = require('../Square/Square.js');
 var PieceSupply = require('../PieceSupply/PieceSupply.js');
-var Functions = require('../../lib/Functions.js');
+var Functions = require('../../lib/functions.js');
 var Chess = require('../../lib/chess.min.js');
 var React = require('react');
 

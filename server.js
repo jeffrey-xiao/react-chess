@@ -112,6 +112,15 @@ io.on('connection', function (socket) {
 		players.delete(socket.id);
 	});
 	
+	socket.on('chat:send', function (data) {
+		var date = new Date();
+		io.to(data.token).emit('chat:receive', {
+			author: data.author,
+			time: date.getHours() + ":" + date.getMinutes(),
+			body: data.body
+		});
+	});
+	
 	socket.on('game:move', function (data) {
 		console.log("BOARD MOVED", data.from, data.to, data.color);
 		

@@ -1,5 +1,5 @@
 var React = require('react');
-var Functions = require('../../lib/Functions');
+var Functions = require('../../lib/functions');
 
 var Clock = React.createClass({
 	

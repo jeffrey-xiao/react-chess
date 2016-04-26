@@ -60,7 +60,7 @@
 	var Chess = __webpack_require__(186).Chess;
 
 	var Game = __webpack_require__(187);
-	var GameForm = __webpack_require__(197);
+	var GameForm = __webpack_require__(198);
 	var PieceSupply = __webpack_require__(191);
 
 	var token = window.location.href.split('/')[4];
@@ -32753,6 +32753,7 @@
 	var Clock = __webpack_require__(194);
 	var Modal = __webpack_require__(195);
 	var History = __webpack_require__(196);
+	var Chat = __webpack_require__(197);
 
 	var Chess = __webpack_require__(186);
 
@@ -32789,7 +32790,8 @@
 						n: 0,
 						p: 0
 					}
-				}
+				},
+				messages: []
 			};
 		},
 
@@ -32803,6 +32805,7 @@
 			socket.on('room:update', this._roomUpdate);
 			socket.on('game:timeupdate', this._gameTimeupdate);
 			socket.on('game:timeout', this._gameTimeout);
+			socket.on('chat:receive', this._chatReceive);
 
 			socket.emit('room:join', {
 				token: this.props.token
@@ -32810,10 +32813,19 @@
 		},
 
 		_gameTimeout: function (data) {
-			console.log(data.boardNum, data.color);
 			if (this.state.boardNum == data.boardNum) {
 				if (this.getColor() == data.color) this.setState({ gameState: 'LOST', message: 'YOU HAVE LOST' });else this.setState({ gameState: 'WON', message: 'YOU HAVE WON' });
 			}
+		},
+
+		_chatReceive: function (data) {
+			var newMessages = this.state.messages;
+			newMessages.push({
+				author: data.author,
+				time: data.time,
+				body: data.body
+			});
+			this.setState({ messages: newMessages });
 		},
 
 		_gameTimeupdate: function (data) {
@@ -32865,7 +32877,6 @@
 		},
 
 		_gamePlaced: function (data) {
-			console.log("PLACED ", data.color, data.piece);
 			var newBoards = this.state.boards;
 			newBoards[data.boardNum] = new Chess(data.fen);
 			this.setState({ boards: newBoards });
@@ -32979,6 +32990,10 @@
 					token: this.props.token
 				});
 			} else if (this.state.boards[this.state.boardNum].in_draw() || this.state.boards[this.state.boardNum].in_stalemate() || this.state.boards[this.state.boardNum].in_threefold_repetition()) {
+				console.log(this.state.boards[this.state.boardNum].in_draw());
+				console.log(this.state.boards[this.state.boardNum].in_stalemate());
+				console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
+				console.log(this.state.boards[this.state.boardNum].insufficient_material());
 				this.setState({ gameState: 'DRAWN' });
 				socket.emit('game:end', {
 					boardNum: this.state.boardNum,
@@ -32989,6 +33004,14 @@
 
 		clearMessage: function () {
 			this.setState({ message: '' });
+		},
+
+		sendChatMessage: function (body) {
+			socket.emit('chat:send', {
+				author: this.state.userId,
+				body: body,
+				token: this.props.token
+			});
 		},
 
 		render: function () {
@@ -33016,14 +33039,28 @@
 						React.createElement('div', { className: 'clear' })
 					),
 					React.createElement(
-						'h1',
+						'h3',
 						null,
 						'Your current id is ',
 						this.state.userId
 					),
-					React.createElement(Board, { color: this.getColor(), onMove: this.handleMove, board: this.state.boards[this.state.boardNum], pieces: this.state.pieces }),
-					React.createElement(History, { history: this.state.history }),
-					React.createElement('div', { className: 'clear' }),
+					React.createElement(
+						'div',
+						{ className: 'col' },
+						React.createElement(Board, { color: this.getColor(),
+							onMove: this.handleMove,
+							board: this.state.boards[this.state.boardNum],
+							pieces: this.state.pieces })
+					),
+					React.createElement(
+						'div',
+						{ className: 'col' },
+						React.createElement(History, { history: this.state.history }),
+						React.createElement(Chat, {
+							messages: this.state.messages,
+							onSubmit: this.sendChatMessage,
+							userId: this.state.userId })
+					),
 					React.createElement(Modal, {
 						message: this.state.message,
 						onSubmit: this.clearMessage })
@@ -38557,9 +38594,85 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(2);
+
+	var Chat = React.createClass({
+		displayName: 'Chat',
+
+		getInitialState: function () {
+			return {
+				message: ''
+			};
+		},
+
+		handleMessageChange: function (e) {
+			this.setState({ message: e.target.value });
+		},
+
+		handleKeyDown: function (e) {
+			if (e.keyCode == 13) {
+				if (this.state.message != '') this.props.onSubmit(this.state.message);
+				this.setState({ message: '' });
+			}
+		},
+
+		render: function () {
+			var messages = [];
+
+			for (var i = 0; i < this.props.messages.length; i++) messages.push(React.createElement(
+				'li',
+				{ key: i, className: "message " + (this.props.userId == this.props.messages[i].author ? "active" : "") },
+				React.createElement(
+					'div',
+					{ className: 'message-author' },
+					this.props.messages[i].author
+				),
+				React.createElement(
+					'div',
+					{ className: 'message-time' },
+					this.props.messages[i].time
+				),
+				React.createElement(
+					'div',
+					{ className: 'message-body' },
+					this.props.messages[i].body
+				)
+			));
+
+			return React.createElement(
+				'div',
+				{ className: 'chat' },
+				React.createElement(
+					'div',
+					{ className: 'chat-header' },
+					'Chat Room'
+				),
+				React.createElement(
+					'ul',
+					{ className: 'messages' },
+					messages
+				),
+				React.createElement('input', {
+					className: 'message-form',
+					type: 'text',
+					value: this.state.message,
+					onChange: this.handleMessageChange,
+					onKeyDown: this.handleKeyDown,
+					placeholder: 'Press enter to submit!' })
+			);
+		}
+	});
+
+	module.exports = Chat;
+
+/***/ },
+/* 198 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
 	var ReactRedux = __webpack_require__(172);
 	var Functions = __webpack_require__(192);
 	var Modal = __webpack_require__(195);
+	var Chat = __webpack_require__(197);
 	var $ = __webpack_require__(185);
 
 	var GameForm = React.createClass({
