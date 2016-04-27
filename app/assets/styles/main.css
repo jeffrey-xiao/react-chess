@@ -93,7 +93,7 @@ html {
 
 .history .history-body {
   width: 100%;
-  height: calc(50vh - 140px);
+  height: calc(50vh - 150px);
   overflow-y: auto;
   text-align: center;
   font-size: 16px;
