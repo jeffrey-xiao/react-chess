@@ -1,8 +1,13 @@
 var Square = require('../Square/Square.js');
 var PieceSupply = require('../PieceSupply/PieceSupply.js');
+var DragPiece = require('../Piece/DragPiece.js');
+var DropPiece = require('../Piece/DropPiece.js');
 var Functions = require('../../lib/functions.js');
 var Chess = require('../../lib/chess.min.js');
+
 var React = require('react');
+var DragDropContext = require('react-dnd').DragDropContext;
+var HTML5Backend = require('react-dnd-html5-backend');
 
 var Board = React.createClass({
 	getInitialState: function () {
@@ -99,7 +104,35 @@ var Board = React.createClass({
 			this.setState({activeRow: -1, activeCol: -1, activePiece: piece});
 		}
 	},
+	
+	handleSupplyDrag: function (piece) {
+		if (this.props.gameState != 'START')
+			return;
+		
+		this.setState({activeRow: -1, activeCol: -1, activePiece: piece});
+	},
+	
+	handleSupplyDrop: function (piece) {
+		if (this.props.gameState != 'START')
+			return;
+		
+		this.setState({activePiece: ''});
+	},
 
+	handlePieceDrag: function (row, col) {
+		if (this.props.gameState != 'START')
+			return;
+		
+		this.setState({activeRow: row, activeCol: col, activePiece: ''});
+	},
+	
+	handlePieceDrop: function (row, col) {
+		if (this.props.gameState != 'START')
+			return;
+
+		this.setState({activeRow: -1, activeCol: -1});
+	},
+	
 	render: function () {
 		var children = [];
 
@@ -123,10 +156,8 @@ var Board = React.createClass({
 									col={col}
 									active={row == this.state.activeRow && col == this.state.activeCol}
 									possible={validSquares.indexOf(Functions.toCode(row, col)) > -1}
-									piece={this.props.board.get(Functions.toCode(row, col))} 
 									key={row * 8 + col}
-									onClick={this.handleSquareClick}>
-								  </Square>);
+									onClick={this.handleSquareClick}/>);
 		} else {
 			for (var row = 0; row < 8; row++) 
 				for (var col = 7; col >= 0; col--)
@@ -135,11 +166,44 @@ var Board = React.createClass({
 									col={col}
 									active={row == this.state.activeRow && col == this.state.activeCol}
 									possible={validSquares.indexOf(Functions.toCode(row, col)) > -1}
-									piece={this.props.board.get(Functions.toCode(row, col))} 
 									key={row * 8 + col}
-									onClick={this.handleSquareClick}>
-								  </Square>);
+									onClick={this.handleSquareClick}/>);
 		}
+		
+		for (var row = 0; row < 8; row++) {
+			for (var col = 0; col < 8; col++) {
+				var square = Functions.toCode(row, col);
+				if (this.props.board.get(square) != null) {
+					if ((this.state.activeRow == -1 && this.state.activeCol == -1 && this.props.board.get(square).color == this.props.color) ||
+					    (this.state.activeRow == row && this.state.activeCol == col)) {
+						children.push(
+							<DragPiece
+								top={(this.props.color == 'w' ? (7 - row) : (row)) * 12.5}
+								left={(this.props.color == 'w' ? (col) : (7 - col)) * 12.5}
+								key={row * 8 + col + 64}
+								row={row}
+								col={col}
+								piece={this.props.board.get(square)}
+								onDrag={this.handlePieceDrag}
+								onDrop={this.handlePieceDrop}
+								onClick={this.handleSquareClick}/>
+						);
+					} else {
+						children.push(
+							<DropPiece
+								top={(this.props.color == 'w' ? (7 - row) : (row)) * 12.5}
+								left={(this.props.color == 'w' ? (col) : (7 - col)) * 12.5}
+								key={row * 8 + col + 64}
+								row={row}
+								col={col}
+								piece={this.props.board.get(square)}
+								onClick={this.handleSquareClick}/>
+						);
+					}
+				}
+			}
+		}
+		
 		return (
 			<div className="game-board">
 				<PieceSupply 
@@ -147,7 +211,9 @@ var Board = React.createClass({
 					currColor={this.props.color} 
 					pieces={this.props.pieces[this.props.color == 'w' ? 'b' : 'w']}
 					activePiece={this.state.activePiece}
-					onClick={this.handleSupplyClick}/>
+					onClick={this.handleSupplyClick}
+					onDrag={this.handleSupplyDrag}
+					onDrop={this.handleSupplyDrop}/>
 				<div className="board">
 					{children}
 					<div className="clear"></div>
@@ -157,10 +223,12 @@ var Board = React.createClass({
 					currColor={this.props.color}
 					activePiece={this.state.activePiece}
 					pieces={this.props.pieces[this.props.color]}
-					onClick={this.handleSupplyClick}/>
+					onClick={this.handleSupplyClick}
+					onDrag={this.handleSupplyDrag}
+					onDrop={this.handleSupplyDrop}/>
 			</div>
 		);
 	}
 });
 		
-module.exports = Board;
+module.exports = DragDropContext(HTML5Backend)(Board);

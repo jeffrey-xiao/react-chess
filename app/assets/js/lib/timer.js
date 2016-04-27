@@ -8,7 +8,7 @@ var Timer = function (time, inc, boardNum, update, callback) {
 		interval = setInterval(function () {
 			remainingTime -= 0.1;
 			update(remainingTime, boardNum);
-			if (remainingTime <= 0.0) {
+			if (remainingTime < 0.1) {
 				clearInterval(interval);
 				callback(boardNum);
 			}

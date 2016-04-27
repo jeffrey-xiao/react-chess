@@ -36,7 +36,7 @@ module.exports = {
 			return hours + ":" + padZero(minutes, 2);
 		else if (minutes != 0)
 			return minutes + ":" + padZero(seconds, 2);
-		return seconds + "." + time;
+		return seconds + "." + Math.floor(time * 10);
 	},
 	
 	padZero: padZero

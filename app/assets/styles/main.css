@@ -135,13 +135,13 @@ html {
   margin: 0px 10px auto;
   display: inline-block;
   position: relative;
+  border: 1px black solid;
+  border-radius: 5px;
 }
 
 .pieceSupplies .pieceSupply img {
   width: 100%;
   height: 100%;
-  border: 1px black solid;
-  border-radius: 5px;
 }
 
 .pieceSupplies .pieceSupply .pieceSupplyCount {
@@ -155,7 +155,7 @@ html {
   width: 20px;
 }
 
-.pieceSupplies .active img {
+.pieceSupplies .active {
   border: 1px red solid !important;
 }
 
@@ -168,6 +168,12 @@ html {
   max-width: calc((80vh - 150px));
   height: calc((60vw));
   max-height: calc((80vh - 150px));
+  position: relative;
+}
+
+.board .piece {
+  width: 100%;
+  height: 100%;
 }
 
 .board .square {

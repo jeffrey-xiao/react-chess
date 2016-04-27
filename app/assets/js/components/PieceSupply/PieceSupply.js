@@ -1,13 +1,26 @@
 var React = require('react');
+var SupplyPiece = require('../Piece/SupplyPiece');
 
 var pieceNames = ['q', 'r', 'b', 'n', 'p'];
 
 module.exports = React.createClass({
 	
 	handleClick: function (piece, pieceCount) {
+		console.log("PIECE HAS BEEN CLICKED");
 		if (this.props.currColor == this.props.color && pieceCount > 0) {
 			this.props.onClick(piece);
 		}
+	},
+	
+	handleDrag: function (piece, pieceCount) {
+		console.log(this.props.currColor, this.props.color);
+		if (this.props.currColor == this.props.color && pieceCount > 0)
+			this.props.onDrag(piece);
+	},
+	
+	handleDrop: function (piece, pieceCount) {
+		if (this.props.currColor == this.props.color && pieceCount > 0)
+			this.props.onDrop(piece);
 	},
 	
 	render: function () {
@@ -17,9 +30,13 @@ module.exports = React.createClass({
 			children.push(
 				<div 
 					className={"pieceSupply " + (this.props.color == this.props.currColor && pieceNames[i] == this.props.activePiece ? 'active' : '')}
-					key={this.props.color + pieceNames[i]} 
+					key={this.props.color + pieceNames[i]}
 					onClick={this.handleClick.bind(this, pieceNames[i], this.props.pieces[pieceNames[i]])}>
-					<img src={"../app/assets/img/" + this.props.color + pieceNames[i] + ".svg"}/>
+					<SupplyPiece 
+						color={this.props.color} 
+						pieceName={pieceNames[i]}
+						onDrag={this.handleDrag.bind(this, pieceNames[i], this.props.pieces[pieceNames[i]])}
+						onDrop={this.handleDrop.bind(this, pieceNames[i], this.props.pieces[pieceNames[i]])}/>
 					<div className="pieceSupplyCount">{this.props.pieces[pieceNames[i]]}</div>
 				</div>
 			);
