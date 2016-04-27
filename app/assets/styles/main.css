@@ -25,6 +25,7 @@ html {
 .chat .chat-header {
   font-weight: bold;
   padding: 10px 0px 10px 0px;
+  font-size: 20px;
 }
 
 .chat ul.messages {
@@ -75,7 +76,7 @@ html {
   width: 25vw;
   max-width: 400px;
   height: 40vh;
-  background-color: #eee;
+  background-color: #ddd;
   margin-left: 50px;
   margin-bottom: 30px;
   border-radius: 10px;
@@ -83,18 +84,19 @@ html {
 
 .history .history-header {
   text-align: center;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: bold;
+  padding: 10px 0px;
   width: 100%;
   border-bottom: 1px solid #ccc;
 }
 
 .history .history-body {
   width: 100%;
-  height: calc(50vh - 80px);
+  height: calc(50vh - 140px);
   overflow-y: auto;
   text-align: center;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .history .history-body .history-row {
