@@ -24,7 +24,7 @@ var Chat = React.createClass({
 		
 		for (var i = 0; i < this.props.messages.length; i++)
 			messages.push(
-				<li key={i} className={"message " + (this.props.userId == this.props.messages[i].author ? "active" : "")}>
+				<li key={i} className={"message " + (this.props.username == this.props.messages[i].author ? "active" : "")}>
 					<div className="message-author">
 						{this.props.messages[i].author}
 					</div>

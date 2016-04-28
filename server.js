@@ -6,6 +6,7 @@ var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var sassMiddleware = require('node-sass-middleware');
 var Immutable = require('immutable');
+var SortedSet = require("collections/sorted-set");
 
 var Map = Immutable.Map;
 var List = Immutable.List;
@@ -45,6 +46,9 @@ app.get('/play/:id', function (req, res, next) {
 
 var games = Map();
 var players = Map();
+var availableKeys = SortedSet();
+var maxKey = 0;
+
 
 io.on('connection', function (socket) {
 	console.log('a user has connected', socket.id);
@@ -53,12 +57,14 @@ io.on('connection', function (socket) {
 		if (players.get(socket.id) == null)
 			return;
 		
-		var token = players.get(socket.id);
-		
+		var token = players.getIn([socket.id, 'token']);
+		console.log("deleting from", token);
 		if (games.get(token) == null)
 			return;
 		
 		games = games.updateIn([token, 'white'], function (players) {
+			console.log("DELETING",socket.id);
+			console.log(players);
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -69,6 +75,8 @@ io.on('connection', function (socket) {
 		});
 		
 		games = games.updateIn([token, 'black'], function (players) {
+			console.log("DELETING",socket.id);
+			console.log(players);
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -81,12 +89,24 @@ io.on('connection', function (socket) {
 		var white = []
 		var black = []
 		
-		for (var i = 0; i < games.getIn([token, 'white']).size; i++)
-			white.push(games.getIn([token, 'white']).get(i).id);
-		for (var i = 0; i < games.getIn([token, 'black']).size; i++)
-			black.push(games.getIn([token, 'black']).get(i).id);
+		for (var i = 0; i < games.getIn([token, 'white']).size; i++) {
+			var userId = games.getIn([token, 'white']).get(i).id; 
+			white.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
+		
+		for (var i = 0; i < games.getIn([token, 'black']).size; i++) {
+			var userId = games.getIn([token, 'black']).get(i).id;
+			black.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
 		
 		console.log("Room update emitted",token);
+		console.log(white, black);
 		io.to(token).emit('room:update', {
 			white: white,
 			black: black
@@ -108,7 +128,13 @@ io.on('connection', function (socket) {
 			games = games.delete(token);
 			io.to(token).emit('token:invalid', {message: 'Owner has left the room!'});
 		}
+		var username = players.getIn([socket.id, 'username']);
 		
+		if (username.startsWith("Guest")) {
+			console.log("ADDING",parseInt(username.substr(5)));
+			console.log(username.substr(5));
+			availableKeys.push(parseInt(username.substr(5)));
+		}
 		players.delete(socket.id);
 	});
 	
@@ -116,7 +142,7 @@ io.on('connection', function (socket) {
 		var date = new Date();
 		io.to(data.token).emit('chat:receive', {
 			author: data.author,
-			time: date.getHours() + ":" + date.getMinutes(),
+			time: date.getHours() + ":" + ('00' + date.getMinutes()).substr(("" + date.getMinutes).length),
 			body: data.body
 		});
 	});
@@ -306,7 +332,20 @@ io.on('connection', function (socket) {
 		
 		console.log("Actually joining with socket");
 		socket.join(data.token);
-		players = players.set(socket.id, data.token);
+		
+		var username;
+		if (availableKeys.length == 0) {
+			username = ++maxKey;
+		} else {
+			console.log("SELECTING", availableKeys.findLeast().value);
+			username = availableKeys.findLeast().value;
+			availableKeys.remove(username);
+		}
+		
+		players = players.set(socket.id, Map({
+			token: data.token,
+			username: "Guest" + username
+		}));
 		
 		games = games.updateIn([data.token, 'creator'], function (s) {
 			if (s == null)
@@ -323,17 +362,31 @@ io.on('connection', function (socket) {
 		console.log("Emitting a room enter", games.getIn([data.token, 'creator']).id);
 		socket.emit('room:enter', {
 			creatorId: games.getIn([data.token, 'creator']).id,
-			userId: socket.id
+			userId: socket.id,
+			username: "Guest" + username
 		});
+		
 		
 		var white = []
 		var black = []
 		
-		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++)
-			white.push(games.getIn([data.token, 'white']).get(i).id);
+		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++) {
+			var userId = games.getIn([data.token, 'white']).get(i).id; 
+			white.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
 		
-		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++)
-			black.push(games.getIn([data.token, 'black']).get(i).id);
+		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++) {
+			var userId = games.getIn([data.token, 'black']).get(i).id;
+			black.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
+		
+		console.log(white, black);
 		
 		io.to(data.token).emit('room:update', {
 			white: white,
@@ -371,10 +424,21 @@ io.on('connection', function (socket) {
 		var white = []
 		var black = []
 		
-		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++)
-			white.push(games.getIn([data.token, 'white']).get(i).id);
-		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++)
-			black.push(games.getIn([data.token, 'black']).get(i).id);
+		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++) {
+			var userId = games.getIn([data.token, 'white']).get(i).id; 
+			white.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
+		
+		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++) {
+			var userId = games.getIn([data.token, 'black']).get(i).id;
+			black.push({
+				userId: userId,
+				username: players.getIn([userId, 'username'])
+			});
+		}
 		
 		io.to(data.token).emit('room:update', {
 			white: white,

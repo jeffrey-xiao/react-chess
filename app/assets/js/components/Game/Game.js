@@ -19,17 +19,23 @@ var Game = React.createClass({
 		return {
 			gameState: 'WAITING',
 			gameType: '',
+			
 			modalMessage: '',
 			modalCallback: this.clearModalMessage, 
+			
 			userId: '',
+			username: '',
 			creatorId: '',
+			
 			boardNum: -1,
 			white: [],
 			black: [],
 			boards: [],
 			whiteTimes: [],
 			blackTimes: [],
+			
 			history: [],
+			
 			pieces: {
 				w: {
 					q: 0,
@@ -47,6 +53,7 @@ var Game = React.createClass({
 					p: 0
 				},
 			},
+			
 			messages: []
 		};
 	},
@@ -183,7 +190,8 @@ var Game = React.createClass({
 		console.log("Entered room");
 		this.setState({
 			creatorId: data.creatorId,
-			userId: data.userId
+			userId: data.userId,
+			username: data.username
 		});
 	},
 	
@@ -200,7 +208,8 @@ var Game = React.createClass({
 				token: this.props.token
 			});
 		}
-		
+		console.log(data.white);
+		console.log(data.black);
 		this.setState({
 			white: data.white,
 			black: data.black
@@ -251,11 +260,11 @@ var Game = React.createClass({
 	
 	getColor: function () {
 		for (var i = 0; i < this.state.white.length; i++)
-			if (this.state.white[i] == this.state.userId)
+			if (this.state.white[i].userId == this.state.userId)
 				return 'w';
 		
 		for (var i = 0; i < this.state.black.length; i++)
-			if (this.state.black[i] == this.state.userId)
+			if (this.state.black[i].userId == this.state.userId)
 				return 'b';
 		return '';
 	},
@@ -309,7 +318,7 @@ var Game = React.createClass({
 	
 	sendChatMessage: function (body) {
 		socket.emit('chat:send', {
-			author: this.state.userId,
+			author: this.state.username,
 			body: body,
 			token: this.props.token
 		});
@@ -332,7 +341,7 @@ var Game = React.createClass({
 						<a className="button new-game" href="/" target="_blank">New Game</a>
 						<div className="clear"></div>
 					</div>
-					<h3>Your current id is {this.state.userId}</h3>
+					<h3>Your current username is {this.state.username}</h3>
 					<div className="col">
 						<Board color={this.getColor()} 
 							onMove={this.handleMove} 
@@ -345,7 +354,7 @@ var Game = React.createClass({
 						<Chat 
 							messages={this.state.messages}
 							onSubmit={this.sendChatMessage}
-							userId={this.state.userId}/>
+							username={this.state.username}/>
 					</div>
 					<Modal 
 						message={this.state.modalMessage}
@@ -356,7 +365,7 @@ var Game = React.createClass({
 			return (
 				<div className="game">
 					<h1>Share this link with your friends: {window.location.href}</h1> 
-					<h1>Your current id is {this.state.userId}</h1>
+					<h1>Your current username is {this.state.username}</h1>
 					<Room white={this.state.white} black={this.state.black} onSubmit={this.handleSubmit}/>
 					{this.state.userId == this.state.creatorId ? creatorButton : ""}
 					<Modal 
