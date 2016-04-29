@@ -58,13 +58,24 @@ io.on('connection', function (socket) {
 			return;
 		
 		var token = players.getIn([socket.id, 'token']);
-		console.log("deleting from", token);
+		var username = players.getIn([socket.id, 'username']);
+		
+		
+		if (username.startsWith("Guest")) {
+			var currUser = parseInt(username.substr(5));
+			availableKeys.push(currUser);
+			while (availableKeys.findGreatest() != null && availableKeys.findGreatest().value == maxKey) {
+				maxKey--;
+				availableKeys.remove(availableKeys.findGreatest().value);
+			}
+		}
+		
+		players.delete(socket.id);
+		
 		if (games.get(token) == null)
 			return;
 		
 		games = games.updateIn([token, 'white'], function (players) {
-			console.log("DELETING",socket.id);
-			console.log(players);
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -75,8 +86,6 @@ io.on('connection', function (socket) {
 		});
 		
 		games = games.updateIn([token, 'black'], function (players) {
-			console.log("DELETING",socket.id);
-			console.log(players);
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -105,8 +114,6 @@ io.on('connection', function (socket) {
 			});
 		}
 		
-		console.log("Room update emitted",token);
-		console.log(white, black);
 		io.to(token).emit('room:update', {
 			white: white,
 			black: black
@@ -128,14 +135,6 @@ io.on('connection', function (socket) {
 			games = games.delete(token);
 			io.to(token).emit('token:invalid', {message: 'Owner has left the room!'});
 		}
-		var username = players.getIn([socket.id, 'username']);
-		
-		if (username.startsWith("Guest")) {
-			console.log("ADDING",parseInt(username.substr(5)));
-			console.log(username.substr(5));
-			availableKeys.push(parseInt(username.substr(5)));
-		}
-		players.delete(socket.id);
 	});
 	
 	socket.on('chat:send', function (data) {
@@ -216,7 +215,6 @@ io.on('connection', function (socket) {
 	});
 	
 	socket.on('game:end', function (data) {
-		console.log(data.token, data.boardNum)
 		if (games.getIn([data.token, 'whiteTimers', data.boardNum]) != null)
 			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
 		if (games.getIn([data.token, 'blackTimers', data.boardNum]) != null)
@@ -230,19 +228,22 @@ io.on('connection', function (socket) {
 		var game = games.get(data.token);
 		var time = game.get('time');
 		var inc = game.get('inc');
+		var gameMode = game.get('gameMode');
 		
 		for (var i = 0; i < game.get('white').size; i++) {
 			game.get('white').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
-				inc: inc
+				inc: inc,
+				gameMode: gameMode
 			});
 			game.get('black').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
-				inc: inc
+				inc: inc,
+				gameMode: gameMode
 			});
 			
 			games = games.updateIn([data.token, 'whiteTimers'], function (list) {
@@ -300,6 +301,7 @@ io.on('connection', function (socket) {
 			time: data.time,
 			inc: data.inc,
 			roomSize: data.teamSize * 2,
+			gameMode: data.gameMode,
 			white: List(),
 			black: List(),
 			whiteTimers: List(),
@@ -322,8 +324,6 @@ io.on('connection', function (socket) {
 
 		var playerCnt = game.get('white').size + game.get('black').size;
 		
-		console.log("PLAYERCNT", playerCnt, "ROOM SIZE", game.get('roomSize'))
-		
 		if (playerCnt >= game.get('roomSize')) {
 			console.log("Room is full");
 			socket.emit('room:full');
@@ -337,7 +337,6 @@ io.on('connection', function (socket) {
 		if (availableKeys.length == 0) {
 			username = ++maxKey;
 		} else {
-			console.log("SELECTING", availableKeys.findLeast().value);
 			username = availableKeys.findLeast().value;
 			availableKeys.remove(username);
 		}

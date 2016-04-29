@@ -271,7 +271,7 @@ html {
 }
 
 .button {
-  margin: 10px;
+  margin-top: 10px;
   -moz-box-shadow: inset 0px 1px 0px 0px #97c4fe;
   -webkit-box-shadow: inset 0px 1px 0px 0px #97c4fe;
   box-shadow: inset 0px 1px 0px 0px #97c4fe;
@@ -310,6 +310,61 @@ html {
 .button:active {
   position: relative;
   top: 1px;
+}
+
+.option-no-text {
+  display: inline-block;
+  width: 15px;
+  height: 30px;
+  border-radius: 7px;
+  border: 2px #1e62d0 solid;
+  margin-right: 4px;
+  transition: all 0.25s;
+}
+
+.option-no-text.active {
+  background-color: #1e62d0;
+}
+
+.option-text {
+  display: inline-block;
+  width: 100px;
+  height: 30px;
+  border-radius: 7px;
+  margin-right: 4px;
+  color: #1e62d0;
+  border: 2px #1e62d0 solid;
+  text-align: center;
+  font-size: 14px;
+  line-height: 30px;
+  transition: all 0.25s;
+}
+
+.option-text.active {
+  background-color: #1e62d0;
+  color: #eee;
+}
+
+input[type="text"] {
+  padding: 10px;
+  border: none;
+  border-bottom: solid 2px #c9c9c9;
+  background-color: #eee;
+  transition: border 0.3s;
+  border-radius: 7px;
+}
+
+input[type="text"]:focus,
+input[type="text"].focus {
+  outline-width: 0;
+  border-bottom: solid 2px #969696;
+}
+
+.form-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  margin: 8px 0px 2px 0px;
+  font-weight: bold;
 }
 
 .modal {

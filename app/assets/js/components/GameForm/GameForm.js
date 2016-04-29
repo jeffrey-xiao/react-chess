@@ -11,7 +11,8 @@ var GameForm = React.createClass({
 			message: '',
 			time: '0/30/0',
 			inc: '0/0/0',
-			teamSize: 1
+			teamSize: 1,
+			gameMode: 'NORMAL'
 		}
 	},
 
@@ -49,11 +50,6 @@ var GameForm = React.createClass({
 			return;
 		}
 		
-		if (this.state.teamSize < 1 || this.state.teamSize > 5) {
-			this.setState({message: 'Time size must be between 1 and 5 inclusive'});
-			return;
-		}
-		
 		var token = Functions.toBase64(new Date().getTime().toString());
 		
 		var time = Functions.toInt(timeTokens[0]) * 60 * 60 + Functions.toInt(timeTokens[1]) * 60 + Functions.toInt(timeTokens[2]);
@@ -63,7 +59,8 @@ var GameForm = React.createClass({
 			token: token,
 			time: time,
 			inc: inc,
-			teamSize: this.state.teamSize
+			teamSize: this.state.teamSize,
+			gameMode: this.state.gameMode
 		});
 
 		this.setState({message: ''});
@@ -77,8 +74,12 @@ var GameForm = React.createClass({
 		this.setState({inc: e.target.value});	
 	},
 	
-	handleTeamSizeChange: function (e) {
-		this.setState({teamSize: e.target.value});	
+	handleTeamSizeChange: function (val) {
+		this.setState({teamSize: val});	
+	},
+	
+	handleGameModeChange: function (val) {
+		this.setState({gameMode: val});
 	},
 	
 	clearMessage: function () {
@@ -88,35 +89,60 @@ var GameForm = React.createClass({
 	render: function () {
 		return (
 			<div>
-				Time (hours/minutes/seconds): 
-				<input 
-					type="text" 
-					name="time" 
-					onChange={this.handleTimeChange}
-					value={this.state.time}/>
-				<br/>
-				
-				Increment (hours/minutes/seconds): 
-				<input 
-					type="text" 
-					name="inc" 
-					onChange={this.handleIncChange}
-					value={this.state.inc}/>
-				<br/>
-				
-				Team Size (max 5): 
-				<input 
-					type="number" 
-					min="1"
-					max="5"
-					name="teamsize" 
-					onChange={this.handleTeamSizeChange}
-					value={this.state.teamSize}/>
-				<br/>
-				
 				<form onSubmit={this.handleSubmit}>	
-					<input type="submit"></input>
+					<div className="form-label">Time (h/m/s)</div>
+					<input 
+						type="text" 
+						name="time" 
+						onChange={this.handleTimeChange}
+						value={this.state.time}/>
+					<br/>
+
+					<div className="form-label">Increment (h/m/s)</div>
+					<input 
+						type="text" 
+						name="inc" 
+						onChange={this.handleIncChange}
+						value={this.state.inc}/>
+					<br/>
+
+					<div className="form-label">Game Mode</div>
+					<div className="option-row">
+						<div
+							className={"option-text " + (this.state.gameMode == 'NORMAL' ? "active" : "")}
+							onClick={this.handleGameModeChange.bind(this, "NORMAL")}>NORMAL</div>
+						
+						<div
+							className={"option-text " + (this.state.gameMode == 'CRAZYHOUSE' ? "active" : "")}
+							onClick={this.handleGameModeChange.bind(this, "CRAZYHOUSE")}>CRAZYHOUSE</div>
+						
+						<div
+							className={"option-text " + (this.state.gameMode == 'BUGHOUSE' ? "active" : "")}
+							onClick={this.handleGameModeChange.bind(this, "BUGHOUSE")}>BUGHOUSE</div>
+					</div>
+					
+					<div className="form-label">Team Size</div>
+					<div className="option-row">
+						<div 
+							className={"option-no-text " + (this.state.teamSize >= 1 ? "active" : "")} 
+							onClick={this.handleTeamSizeChange.bind(this, 1)}></div>
+						<div 
+							className={"option-no-text " + (this.state.teamSize >= 2 ? "active" : "")} 
+							onClick={this.handleTeamSizeChange.bind(this, 2)}></div>
+						<div 
+							className={"option-no-text " + (this.state.teamSize >= 3 ? "active" : "")} 
+							onClick={this.handleTeamSizeChange.bind(this, 3)}></div>
+						<div 
+							className={"option-no-text " + (this.state.teamSize >= 4 ? "active" : "")} 
+							onClick={this.handleTeamSizeChange.bind(this, 4)}></div>
+						<div 
+							className={"option-no-text " + (this.state.teamSize >= 5 ? "active" : "")} 
+							onClick={this.handleTeamSizeChange.bind(this, 5)}></div>
+					</div>
+						
+					<input type="submit" className="button" value="Create Game!"/>
 				</form>
+					
 				<Modal 
 					message={this.state.message}
 					onSubmit={this.clearMessage}/>

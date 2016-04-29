@@ -18,7 +18,7 @@ var Game = React.createClass({
 	getInitialState: function () {
 		return {
 			gameState: 'WAITING',
-			gameType: '',
+			gameMode: '',
 			
 			modalMessage: '',
 			modalCallback: this.clearModalMessage, 
@@ -121,7 +121,8 @@ var Game = React.createClass({
 			boardNum: data.boardNum,
 			boards: boards,
 			whiteTimes: whiteTimes,
-			blackTimes: blackTimes
+			blackTimes: blackTimes,
+			gameMode: data.gameMode
 		});
 	},
 	
@@ -333,6 +334,7 @@ var Game = React.createClass({
 		if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 			return (
 				<div className="game">
+					{this.state.gameMode}
 					<div className="game-header">
 						<Clock 
 							whiteTime={this.state.whiteTimes[this.state.boardNum]}

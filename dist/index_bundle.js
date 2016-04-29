@@ -32763,7 +32763,7 @@
 		getInitialState: function () {
 			return {
 				gameState: 'WAITING',
-				gameType: '',
+				gameMode: '',
 
 				modalMessage: '',
 				modalCallback: this.clearModalMessage,
@@ -32860,7 +32860,8 @@
 				boardNum: data.boardNum,
 				boards: boards,
 				whiteTimes: whiteTimes,
-				blackTimes: blackTimes
+				blackTimes: blackTimes,
+				gameMode: data.gameMode
 			});
 		},
 
@@ -33068,6 +33069,7 @@
 				return React.createElement(
 					'div',
 					{ className: 'game' },
+					this.state.gameMode,
 					React.createElement(
 						'div',
 						{ className: 'game-header' },
@@ -48431,7 +48433,8 @@
 				message: '',
 				time: '0/30/0',
 				inc: '0/0/0',
-				teamSize: 1
+				teamSize: 1,
+				gameMode: 'NORMAL'
 			};
 		},
 
@@ -48469,11 +48472,6 @@
 				return;
 			}
 
-			if (this.state.teamSize < 1 || this.state.teamSize > 5) {
-				this.setState({ message: 'Time size must be between 1 and 5 inclusive' });
-				return;
-			}
-
 			var token = Functions.toBase64(new Date().getTime().toString());
 
 			var time = Functions.toInt(timeTokens[0]) * 60 * 60 + Functions.toInt(timeTokens[1]) * 60 + Functions.toInt(timeTokens[2]);
@@ -48483,7 +48481,8 @@
 				token: token,
 				time: time,
 				inc: inc,
-				teamSize: this.state.teamSize
+				teamSize: this.state.teamSize,
+				gameMode: this.state.gameMode
 			});
 
 			this.setState({ message: '' });
@@ -48497,8 +48496,12 @@
 			this.setState({ inc: e.target.value });
 		},
 
-		handleTeamSizeChange: function (e) {
-			this.setState({ teamSize: e.target.value });
+		handleTeamSizeChange: function (val) {
+			this.setState({ teamSize: val });
+		},
+
+		handleGameModeChange: function (val) {
+			this.setState({ gameMode: val });
 		},
 
 		clearMessage: function () {
@@ -48509,33 +48512,86 @@
 			return React.createElement(
 				'div',
 				null,
-				'Time (hours/minutes/seconds):',
-				React.createElement('input', {
-					type: 'text',
-					name: 'time',
-					onChange: this.handleTimeChange,
-					value: this.state.time }),
-				React.createElement('br', null),
-				'Increment (hours/minutes/seconds):',
-				React.createElement('input', {
-					type: 'text',
-					name: 'inc',
-					onChange: this.handleIncChange,
-					value: this.state.inc }),
-				React.createElement('br', null),
-				'Team Size (max 5):',
-				React.createElement('input', {
-					type: 'number',
-					min: '1',
-					max: '5',
-					name: 'teamsize',
-					onChange: this.handleTeamSizeChange,
-					value: this.state.teamSize }),
-				React.createElement('br', null),
 				React.createElement(
 					'form',
 					{ onSubmit: this.handleSubmit },
-					React.createElement('input', { type: 'submit' })
+					React.createElement(
+						'div',
+						{ className: 'form-label' },
+						'Time (h/m/s)'
+					),
+					React.createElement('input', {
+						type: 'text',
+						name: 'time',
+						onChange: this.handleTimeChange,
+						value: this.state.time }),
+					React.createElement('br', null),
+					React.createElement(
+						'div',
+						{ className: 'form-label' },
+						'Increment (h/m/s)'
+					),
+					React.createElement('input', {
+						type: 'text',
+						name: 'inc',
+						onChange: this.handleIncChange,
+						value: this.state.inc }),
+					React.createElement('br', null),
+					React.createElement(
+						'div',
+						{ className: 'form-label' },
+						'Game Mode'
+					),
+					React.createElement(
+						'div',
+						{ className: 'option-row' },
+						React.createElement(
+							'div',
+							{
+								className: "option-text " + (this.state.gameMode == 'NORMAL' ? "active" : ""),
+								onClick: this.handleGameModeChange.bind(this, "NORMAL") },
+							'NORMAL'
+						),
+						React.createElement(
+							'div',
+							{
+								className: "option-text " + (this.state.gameMode == 'CRAZYHOUSE' ? "active" : ""),
+								onClick: this.handleGameModeChange.bind(this, "CRAZYHOUSE") },
+							'CRAZYHOUSE'
+						),
+						React.createElement(
+							'div',
+							{
+								className: "option-text " + (this.state.gameMode == 'BUGHOUSE' ? "active" : ""),
+								onClick: this.handleGameModeChange.bind(this, "BUGHOUSE") },
+							'BUGHOUSE'
+						)
+					),
+					React.createElement(
+						'div',
+						{ className: 'form-label' },
+						'Team Size'
+					),
+					React.createElement(
+						'div',
+						{ className: 'option-row' },
+						React.createElement('div', {
+							className: "option-no-text " + (this.state.teamSize >= 1 ? "active" : ""),
+							onClick: this.handleTeamSizeChange.bind(this, 1) }),
+						React.createElement('div', {
+							className: "option-no-text " + (this.state.teamSize >= 2 ? "active" : ""),
+							onClick: this.handleTeamSizeChange.bind(this, 2) }),
+						React.createElement('div', {
+							className: "option-no-text " + (this.state.teamSize >= 3 ? "active" : ""),
+							onClick: this.handleTeamSizeChange.bind(this, 3) }),
+						React.createElement('div', {
+							className: "option-no-text " + (this.state.teamSize >= 4 ? "active" : ""),
+							onClick: this.handleTeamSizeChange.bind(this, 4) }),
+						React.createElement('div', {
+							className: "option-no-text " + (this.state.teamSize >= 5 ? "active" : ""),
+							onClick: this.handleTeamSizeChange.bind(this, 5) })
+					),
+					React.createElement('input', { type: 'submit', className: 'button', value: 'Create Game!' })
 				),
 				React.createElement(Modal, {
 					message: this.state.message,
