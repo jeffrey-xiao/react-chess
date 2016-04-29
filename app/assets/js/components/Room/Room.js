@@ -14,7 +14,7 @@ var Room = React.createClass({
 	render: function () {
 		var white = [];
 		var black = [];
-		console.log(this.props.white);
+
 		for (var i = 0; i < this.props.white.length; i++)
 			white.push(<li key={this.props.white[i].username}>{this.props.white[i].username}</li>);
 					   

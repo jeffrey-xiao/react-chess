@@ -14,8 +14,8 @@ var List = Immutable.List;
 var Timer = require('./app/assets/js/lib/timer');
 var Chess = require('./app/assets/js/lib/chess.min.js').Chess;
 
-var hostname = 'localhost';
-var port = 8080;
+var hostname = process.env.OPENSHIFT_NODEJS_IP || 'localhost';
+var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 
 var srcPath = __dirname;
 var destPath = __dirname;
@@ -228,22 +228,19 @@ io.on('connection', function (socket) {
 		var game = games.get(data.token);
 		var time = game.get('time');
 		var inc = game.get('inc');
-		var gameMode = game.get('gameMode');
 		
 		for (var i = 0; i < game.get('white').size; i++) {
 			game.get('white').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
-				inc: inc,
-				gameMode: gameMode
+				inc: inc
 			});
 			game.get('black').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
-				inc: inc,
-				gameMode: gameMode
+				inc: inc
 			});
 			
 			games = games.updateIn([data.token, 'whiteTimers'], function (list) {
@@ -362,7 +359,8 @@ io.on('connection', function (socket) {
 		socket.emit('room:enter', {
 			creatorId: games.getIn([data.token, 'creator']).id,
 			userId: socket.id,
-			username: "Guest" + username
+			username: "Guest" + username,
+			gameMode: games.getIn([data.token, 'gameMode'])
 		});
 		
 		
@@ -448,6 +446,6 @@ io.on('connection', function (socket) {
 
 app.use("/", express.static(__dirname + '/'));
 
-http.listen(port, function () {
-	console.log("Server is running at http://" + hostname + "/" + port);
+app.listen(port, hostname, function () {
+	console.log("Server is listening on http://" + hostname + "/" + port);
 });

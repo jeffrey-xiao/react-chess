@@ -32860,8 +32860,7 @@
 				boardNum: data.boardNum,
 				boards: boards,
 				whiteTimes: whiteTimes,
-				blackTimes: blackTimes,
-				gameMode: data.gameMode
+				blackTimes: blackTimes
 			});
 		},
 
@@ -32878,6 +32877,10 @@
 				} else if (this.state.gameMode == 'CRAZYHOUSE') {
 					var newPieces = this.state.pieces;
 					newPieces[data.color][data.piece]++;
+					this.setState({ pieces: newPieces });
+				} else if (this.state.gameMode == 'BUGHOUSE' && data.boardNum != this.state.boardNum) {
+					var newPieces = this.state.pieces;
+					newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
 					this.setState({ pieces: newPieces });
 				}
 			}
@@ -32937,7 +32940,8 @@
 			this.setState({
 				creatorId: data.creatorId,
 				userId: data.userId,
-				username: data.username
+				username: data.username,
+				gameMode: data.gameMode
 			});
 		},
 
@@ -32990,8 +32994,14 @@
 
 		handlePlay: function (e) {
 			e.preventDefault();
+
 			if (this.state.white.length != this.state.black.length) {
 				this.setState({ modalMessage: 'Teams must be of equal size!' });
+				return;
+			}
+
+			if (this.state.gameMode == 'BUGHOUSE' && (this.state.white.length != 2 || this.state.black.length != 2)) {
+				this.setState({ modalMessage: 'Teams must have two players each!' });
 				return;
 			}
 
@@ -33067,13 +33077,13 @@
 			var creatorButton = React.createElement(
 				'form',
 				{ onSubmit: this.handlePlay },
-				React.createElement('input', { type: 'submit' })
+				React.createElement('input', { type: 'submit', className: 'button' })
 			);
+
 			if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 				return React.createElement(
 					'div',
 					{ className: 'game' },
-					this.state.gameMode,
 					React.createElement(
 						'div',
 						{ className: 'game-header' },
@@ -33133,7 +33143,11 @@
 						'Your current username is ',
 						this.state.username
 					),
-					React.createElement(Room, { white: this.state.white, black: this.state.black, onSubmit: this.handleSubmit }),
+					React.createElement(Room, {
+						white: this.state.white,
+						black: this.state.black,
+						onSubmit: this.handleSubmit,
+						gameMode: this.state.gameMode }),
 					this.state.userId == this.state.creatorId ? creatorButton : "",
 					React.createElement(Modal, {
 						message: this.state.modalMessage,
@@ -48172,7 +48186,7 @@
 		render: function () {
 			var white = [];
 			var black = [];
-			console.log(this.props.white);
+
 			for (var i = 0; i < this.props.white.length; i++) white.push(React.createElement(
 				'li',
 				{ key: this.props.white[i].username },
@@ -48503,11 +48517,16 @@
 		},
 
 		handleTeamSizeChange: function (val) {
-			this.setState({ teamSize: val });
+			if (this.state.gameMode == 'BUGHOUSE' && val != 2) {
+				this.setState({ message: "Bughouse can only be played with team sizes of two!" });
+			} else {
+				this.setState({ teamSize: val });
+			}
 		},
 
 		handleGameModeChange: function (val) {
 			this.setState({ gameMode: val });
+			if (val == "BUGHOUSE") this.setState({ teamSize: 2 });
 		},
 
 		clearMessage: function () {

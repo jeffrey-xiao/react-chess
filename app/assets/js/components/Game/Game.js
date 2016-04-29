@@ -121,8 +121,7 @@ var Game = React.createClass({
 			boardNum: data.boardNum,
 			boards: boards,
 			whiteTimes: whiteTimes,
-			blackTimes: blackTimes,
-			gameMode: data.gameMode
+			blackTimes: blackTimes
 		});
 	},
 	
@@ -139,6 +138,10 @@ var Game = React.createClass({
 			} else if (this.state.gameMode == 'CRAZYHOUSE') {
 				var newPieces = this.state.pieces;
 				newPieces[data.color][data.piece]++;
+				this.setState({pieces: newPieces});
+			} else if (this.state.gameMode == 'BUGHOUSE' && data.boardNum != this.state.boardNum) {
+				var newPieces = this.state.pieces;
+				newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
 				this.setState({pieces: newPieces});
 			}
 		}
@@ -198,7 +201,8 @@ var Game = React.createClass({
 		this.setState({
 			creatorId: data.creatorId,
 			userId: data.userId,
-			username: data.username
+			username: data.username,
+			gameMode: data.gameMode
 		});
 	},
 	
@@ -251,8 +255,14 @@ var Game = React.createClass({
 	
 	handlePlay: function (e) {
 		e.preventDefault();
+		
 		if (this.state.white.length != this.state.black.length) {
 			this.setState({modalMessage: 'Teams must be of equal size!'});
+			return;
+		}
+
+		if (this.state.gameMode == 'BUGHOUSE' && (this.state.white.length != 2 || this.state.black.length != 2)) {
+			this.setState({modalMessage: 'Teams must have two players each!'});
 			return;
 		}
 		
@@ -334,11 +344,15 @@ var Game = React.createClass({
 	},
 	
 	render: function () {
-		var creatorButton = <form onSubmit={this.handlePlay}><input type="submit"/></form>;
+		var creatorButton = (
+			<form onSubmit={this.handlePlay}>
+				<input type="submit" className="button"/>
+			</form>
+		);
+		
 		if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 			return (
 				<div className="game">
-					{this.state.gameMode}
 					<div className="game-header">
 						<Clock 
 							whiteTime={this.state.whiteTimes[this.state.boardNum]}
@@ -373,8 +387,14 @@ var Game = React.createClass({
 				<div className="game">
 					<h1>Share this link with your friends: {window.location.href}</h1> 
 					<h1>Your current username is {this.state.username}</h1>
-					<Room white={this.state.white} black={this.state.black} onSubmit={this.handleSubmit}/>
+					<Room 
+						white={this.state.white} 
+						black={this.state.black} 
+						onSubmit={this.handleSubmit}
+						gameMode={this.state.gameMode}/>
+					
 					{this.state.userId == this.state.creatorId ? creatorButton : ""}
+					
 					<Modal 
 						message={this.state.modalMessage}
 						onSubmit={this.state.modalCallback}/>

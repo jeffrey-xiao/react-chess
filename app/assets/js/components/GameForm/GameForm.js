@@ -75,11 +75,17 @@ var GameForm = React.createClass({
 	},
 	
 	handleTeamSizeChange: function (val) {
-		this.setState({teamSize: val});	
+		if (this.state.gameMode == 'BUGHOUSE' && val != 2) {
+			this.setState({message: "Bughouse can only be played with team sizes of two!"});
+		} else {
+			this.setState({teamSize: val});	
+		}
 	},
 	
 	handleGameModeChange: function (val) {
 		this.setState({gameMode: val});
+		if (val == "BUGHOUSE")
+			this.setState({teamSize: 2});
 	},
 	
 	clearMessage: function () {
