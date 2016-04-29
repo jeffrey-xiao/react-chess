@@ -58,7 +58,7 @@ var Board = React.createClass({
 	},
 	
 	handleSquareClick: function (row, col) {
-		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
+		if (this.props.gameState != 'START')
 			return;
 		
 		var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
@@ -120,14 +120,14 @@ var Board = React.createClass({
 	},
 
 	handlePieceDrag: function (row, col) {
-		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
+		if (this.props.gameState != 'START')
 			return;
 		
 		this.setState({activeRow: row, activeCol: col, activePiece: ''});
 	},
 	
 	handlePieceDrop: function (row, col) {
-		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
+		if (this.props.gameState != 'START')
 			return;
 
 		this.setState({activeRow: -1, activeCol: -1});
