@@ -445,7 +445,12 @@ io.on('connection', function (socket) {
 });
 
 app.use("/", express.static(__dirname + '/'));
-
+/*
 app.listen(port, hostname, function () {
+	console.log("Server is listening on http://" + hostname + "/" + port);
+});
+*/
+
+http.listen(port, hostname, function () {
 	console.log("Server is listening on http://" + hostname + "/" + port);
 });
