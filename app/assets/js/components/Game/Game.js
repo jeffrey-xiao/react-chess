@@ -132,9 +132,15 @@ var Game = React.createClass({
 		this.setState({boards: newBoards});
 		
 		if (data.piece != null) {
-			var newPieces = this.state.pieces;
-			newPieces[data.color][data.piece]++;
-			this.setState({pieces: newPieces});
+			if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
+				var newPieces = this.state.pieces;
+				newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
+				this.setState({pieces: newPieces});
+			} else if (this.state.gameMode == 'CRAZYHOUSE') {
+				var newPieces = this.state.pieces;
+				newPieces[data.color][data.piece]++;
+				this.setState({pieces: newPieces});
+			}
 		}
 		
 		if (data.boardNum == this.state.boardNum) {
@@ -209,8 +215,6 @@ var Game = React.createClass({
 				token: this.props.token
 			});
 		}
-		console.log(data.white);
-		console.log(data.black);
 		this.setState({
 			white: data.white,
 			black: data.black
@@ -349,7 +353,8 @@ var Game = React.createClass({
 							onMove={this.handleMove} 
 							board={this.state.boards[this.state.boardNum]} 
 							pieces={this.state.pieces}
-							gameState={this.state.gameState}/>
+							gameState={this.state.gameState}
+							gameMode={this.state.gameMode}/>
 					</div>
 					<div className="col">
 						<History history={this.state.history}/>

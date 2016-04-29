@@ -141,7 +141,7 @@ io.on('connection', function (socket) {
 		var date = new Date();
 		io.to(data.token).emit('chat:receive', {
 			author: data.author,
-			time: date.getHours() + ":" + ('00' + date.getMinutes()).substr(("" + date.getMinutes).length),
+			time: date.getHours() + ":" + ('00' + date.getMinutes()).substr(("" + date.getMinutes()).length),
 			body: data.body
 		});
 	});

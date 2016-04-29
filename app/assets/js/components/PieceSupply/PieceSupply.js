@@ -6,14 +6,12 @@ var pieceNames = ['q', 'r', 'b', 'n', 'p'];
 module.exports = React.createClass({
 	
 	handleClick: function (piece, pieceCount) {
-		console.log("PIECE HAS BEEN CLICKED");
 		if (this.props.currColor == this.props.color && pieceCount > 0) {
 			this.props.onClick(piece);
 		}
 	},
 	
 	handleDrag: function (piece, pieceCount) {
-		console.log(this.props.currColor, this.props.color);
 		if (this.props.currColor == this.props.color && pieceCount > 0)
 			this.props.onDrag(piece);
 	},

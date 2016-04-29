@@ -58,7 +58,7 @@ var Board = React.createClass({
 	},
 	
 	handleSquareClick: function (row, col) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 		
 		var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
@@ -95,7 +95,7 @@ var Board = React.createClass({
 	},
 	
 	handleSupplyClick: function (piece) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 		
 		if (this.state.activePiece == piece) {
@@ -106,28 +106,28 @@ var Board = React.createClass({
 	},
 	
 	handleSupplyDrag: function (piece) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 		
 		this.setState({activeRow: -1, activeCol: -1, activePiece: piece});
 	},
 	
 	handleSupplyDrop: function (piece) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 		
 		this.setState({activePiece: ''});
 	},
 
 	handlePieceDrag: function (row, col) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 		
 		this.setState({activeRow: row, activeCol: col, activePiece: ''});
 	},
 	
 	handlePieceDrop: function (row, col) {
-		if (this.props.gameState != 'START')
+		if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL')
 			return;
 
 		this.setState({activeRow: -1, activeCol: -1});
@@ -203,13 +203,16 @@ var Board = React.createClass({
 				}
 			}
 		}
+
+		var opponentColor = ((this.props.color == 'w') != (this.props.gameMode == "NORMAL")) ? "b" : "w";
+		var yourColor = ((this.props.color == 'w') != (this.props.gameMode == "NORMAL")) ? "w" : "b";
 		
 		return (
 			<div className="game-board">
 				<PieceSupply 
-					color={this.props.color == 'w' ? 'b' : 'w'} 
+					color={opponentColor} 
 					currColor={this.props.color} 
-					pieces={this.props.pieces[this.props.color == 'w' ? 'b' : 'w']}
+					pieces={this.props.pieces[opponentColor]}
 					activePiece={this.state.activePiece}
 					onClick={this.handleSupplyClick}
 					onDrag={this.handleSupplyDrag}
@@ -219,10 +222,10 @@ var Board = React.createClass({
 					<div className="clear"></div>
 				</div>
 				<PieceSupply 
-					color={this.props.color} 
+					color={yourColor} 
 					currColor={this.props.color}
 					activePiece={this.state.activePiece}
-					pieces={this.props.pieces[this.props.color]}
+					pieces={this.props.pieces[yourColor]}
 					onClick={this.handleSupplyClick}
 					onDrag={this.handleSupplyDrag}
 					onDrop={this.handleSupplyDrop}/>

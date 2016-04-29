@@ -32871,9 +32871,15 @@
 			this.setState({ boards: newBoards });
 
 			if (data.piece != null) {
-				var newPieces = this.state.pieces;
-				newPieces[data.color][data.piece]++;
-				this.setState({ pieces: newPieces });
+				if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
+					var newPieces = this.state.pieces;
+					newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
+					this.setState({ pieces: newPieces });
+				} else if (this.state.gameMode == 'CRAZYHOUSE') {
+					var newPieces = this.state.pieces;
+					newPieces[data.color][data.piece]++;
+					this.setState({ pieces: newPieces });
+				}
 			}
 
 			if (data.boardNum == this.state.boardNum) {
@@ -32948,8 +32954,6 @@
 					token: this.props.token
 				});
 			}
-			console.log(data.white);
-			console.log(data.black);
 			this.setState({
 				white: data.white,
 				black: data.black
@@ -33097,7 +33101,8 @@
 							onMove: this.handleMove,
 							board: this.state.boards[this.state.boardNum],
 							pieces: this.state.pieces,
-							gameState: this.state.gameState })
+							gameState: this.state.gameState,
+							gameMode: this.state.gameMode })
 					),
 					React.createElement(
 						'div',
@@ -38191,7 +38196,7 @@
 		},
 
 		handleSquareClick: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
 			var currPos = Functions.toCode(row, col);
@@ -38223,7 +38228,7 @@
 		},
 
 		handleSupplyClick: function (piece) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			if (this.state.activePiece == piece) {
 				this.setState({ activePiece: '' });
@@ -38233,25 +38238,25 @@
 		},
 
 		handleSupplyDrag: function (piece) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activeRow: -1, activeCol: -1, activePiece: piece });
 		},
 
 		handleSupplyDrop: function (piece) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activePiece: '' });
 		},
 
 		handlePieceDrag: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activeRow: row, activeCol: col, activePiece: '' });
 		},
 
 		handlePieceDrop: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activeRow: -1, activeCol: -1 });
 		},
@@ -38314,13 +38319,16 @@
 				}
 			}
 
+			var opponentColor = this.props.color == 'w' != (this.props.gameMode == "NORMAL") ? "b" : "w";
+			var yourColor = this.props.color == 'w' != (this.props.gameMode == "NORMAL") ? "w" : "b";
+
 			return React.createElement(
 				'div',
 				{ className: 'game-board' },
 				React.createElement(PieceSupply, {
-					color: this.props.color == 'w' ? 'b' : 'w',
+					color: opponentColor,
 					currColor: this.props.color,
-					pieces: this.props.pieces[this.props.color == 'w' ? 'b' : 'w'],
+					pieces: this.props.pieces[opponentColor],
 					activePiece: this.state.activePiece,
 					onClick: this.handleSupplyClick,
 					onDrag: this.handleSupplyDrag,
@@ -38332,10 +38340,10 @@
 					React.createElement('div', { className: 'clear' })
 				),
 				React.createElement(PieceSupply, {
-					color: this.props.color,
+					color: yourColor,
 					currColor: this.props.color,
 					activePiece: this.state.activePiece,
-					pieces: this.props.pieces[this.props.color],
+					pieces: this.props.pieces[yourColor],
 					onClick: this.handleSupplyClick,
 					onDrag: this.handleSupplyDrag,
 					onDrop: this.handleSupplyDrop })
@@ -44121,14 +44129,12 @@
 
 
 		handleClick: function (piece, pieceCount) {
-			console.log("PIECE HAS BEEN CLICKED");
 			if (this.props.currColor == this.props.color && pieceCount > 0) {
 				this.props.onClick(piece);
 			}
 		},
 
 		handleDrag: function (piece, pieceCount) {
-			console.log(this.props.currColor, this.props.color);
 			if (this.props.currColor == this.props.color && pieceCount > 0) this.props.onDrag(piece);
 		},
 

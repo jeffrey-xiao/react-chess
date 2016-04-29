@@ -338,6 +338,7 @@ html {
   font-size: 14px;
   line-height: 30px;
   transition: all 0.25s;
+  font-weight: bold;
 }
 
 .option-text.active {
