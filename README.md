@@ -3,6 +3,7 @@ Multiplayer chess built with react, socket, redux, and immutable.
 
 To Do List:
  - Accounts
- - Game modes (Normal, Crazyhouse, Bughouse)
+ - Bughouse
  - Overlays
- - Redesign for home page and initial loading screen
+ - Redesign for home page and room page
+ - Rethink logic for chat room
