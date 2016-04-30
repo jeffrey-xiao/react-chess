@@ -12,6 +12,37 @@ html {
   float: left;
 }
 
+.room {
+  text-align: center;
+}
+
+.room .team {
+  display: inline-block;
+  width: 30%;
+  margin: 0px 20px;
+  background-color: #ccc;
+  border-radius: 10px;
+  padding-bottom: 20px;
+}
+
+.room .team .team-title {
+  font-weight: bold;
+}
+
+.room .team .team-list {
+  height: 500px;
+  padding: 0px 40px;
+}
+
+.room .team .team-list li {
+  font-size: 24px;
+  list-style: none;
+  height: 40px;
+  background-color: #eee;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
 .chat {
   width: 25vw;
   max-width: 400px;

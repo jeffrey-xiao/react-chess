@@ -75,10 +75,13 @@ io.on('connection', function (socket) {
 		if (games.get(token) == null)
 			return;
 		
+		var boardNum = 0;
+		
 		games = games.updateIn([token, 'team1'], function (players) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
+					boardNum = i;
 					break;
 				}
 			}
@@ -89,6 +92,7 @@ io.on('connection', function (socket) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
+					boardNum = i;
 					break;
 				}
 			}
@@ -116,7 +120,8 @@ io.on('connection', function (socket) {
 		
 		io.to(token).emit('room:update', {
 			team1: team1,
-			team2: team2
+			team2: team2,
+			boardNum: boardNum
 		});
 		
 		if (games.getIn([token, 'creator']) != null && games.getIn([token, 'creator']).id == socket.id) {

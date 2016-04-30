@@ -208,7 +208,7 @@ var Game = React.createClass({
 	
 	_roomUpdate: function (data) {
 		console.log("Updated room");
-		if (this.state.gameState == 'START') {
+		if (this.state.gameState == 'START' && data.boardNum == this.state.boardNum) {
 			this.setState({
 				gameState: 'STOP',
 				modalMessage: 'Your opponent has disconnected!'
@@ -245,7 +245,7 @@ var Game = React.createClass({
 		}
 	},
 	
-	handleSubmit: function (newTeam) {
+	handleRoomChange: function (newTeam) {
 		socket.emit('room:update', {
 			userId: this.state.userId,
 			newTeam: newTeam,
@@ -355,12 +355,6 @@ var Game = React.createClass({
 	},
 	
 	render: function () {
-		var creatorButton = (
-			<form onSubmit={this.handlePlay}>
-				<input type="submit" className="button"/>
-			</form>
-		);
-		
 		if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 			return (
 				<div className="game">
@@ -403,10 +397,10 @@ var Game = React.createClass({
 					<Room 
 						team1={this.state.team1} 
 						team2={this.state.team2} 
-						onSubmit={this.handleSubmit}
+						onRoomChange={this.handleRoomChange}
+						onPlay={this.handlePlay}
+						isCreator={this.state.userId == this.state.creatorId}
 						gameMode={this.state.gameMode}/>
-					
-					{this.state.userId == this.state.creatorId ? creatorButton : ""}
 					
 					<Modal 
 						message={this.state.modalMessage}

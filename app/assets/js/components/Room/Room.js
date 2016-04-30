@@ -3,15 +3,22 @@ var React = require('react');
 var Room = React.createClass({
 	handleTeamSubmit1: function (e) {
 		e.preventDefault();
-		this.props.onSubmit('team1');
+		this.props.onRoomChange('team1');
 	},
 	
 	handleTeamSubmit2: function (e) {
 		e.preventDefault();
-		this.props.onSubmit('team2');
+		this.props.onRoomChange('team2');
 	},
 	
 	render: function () {
+		
+		var creatorButton = (
+			<form onSubmit={this.props.onPlay}>
+				<input type="submit" className="button" style={{fontSize: '30px'}}/>
+			</form>
+		);
+		
 		var team1 = [];
 		var team2 = [];
 
@@ -23,27 +30,40 @@ var Room = React.createClass({
 
 		return (
 			<div className="room">
-				{this.props.gameMode == 'BUGHOUSE' ? (<h1>Team 1</h1>) : (<h1>White</h1>)}
-				<ul className="teamList">
-					{team1}
-				</ul>
-				<form onSubmit={this.handleTeamSubmit1}>
-					{this.props.gameMode == 'BUGHOUSE' ? 
-						<input type="submit" value="Join Team 1"/> : 
-						<input type="submit" value="Join White"/>
-					}
-				</form>
+				<div className="team">
+					<div className="team-title">
+						{this.props.gameMode == 'BUGHOUSE' ? (<h1>Team 1</h1>) : (<h1>White</h1>)}
+					</div>
+
+					<ul className="team-list">
+						{team1}
+					</ul>
+
+					<form onSubmit={this.handleTeamSubmit1}>
+						{this.props.gameMode == 'BUGHOUSE' ? 
+							<input type="submit" value="Join Team 1" className="button"/> : 
+							<input type="submit" value="Join White" className="button"/>
+						}
+					</form>
+				</div>
 			
-				{this.props.gameMode == 'BUGHOUSE' ? (<h1>Team 2</h1>) : (<h1>Black</h1>)}
-				<ul className="teamList">
-					{team2}
-				</ul>
-				<form onSubmit={this.handleTeamSubmit2}>
-					{this.props.gameMode == 'BUGHOUSE' ? 
-						<input type="submit" value="Join Team 2"/> : 
-						<input type="submit" value="Join Black"/>
-					}
-				</form>
+				<div className="team">
+					<div className="team-title">
+						{this.props.gameMode == 'BUGHOUSE' ? (<h1>Team 2</h1>) : (<h1>Black</h1>)}
+					</div>
+
+					<ul className="team-list">
+						{team2}
+					</ul>
+
+					<form onSubmit={this.handleTeamSubmit2}>
+						{this.props.gameMode == 'BUGHOUSE' ? 
+							<input type="submit" value="Join Team 2" className="button"/> : 
+							<input type="submit" value="Join Black" className="button"/>
+						}
+					</form>
+				</div>
+				{this.props.isCreator ? creatorButton : ""}
 			</div>
 		);
 	}

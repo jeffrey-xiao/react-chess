@@ -32947,7 +32947,7 @@
 
 		_roomUpdate: function (data) {
 			console.log("Updated room");
-			if (this.state.gameState == 'START') {
+			if (this.state.gameState == 'START' && data.boardNum == this.state.boardNum) {
 				this.setState({
 					gameState: 'STOP',
 					modalMessage: 'Your opponent has disconnected!'
@@ -32984,7 +32984,7 @@
 			}
 		},
 
-		handleSubmit: function (newTeam) {
+		handleRoomChange: function (newTeam) {
 			socket.emit('room:update', {
 				userId: this.state.userId,
 				newTeam: newTeam,
@@ -33088,12 +33088,6 @@
 		},
 
 		render: function () {
-			var creatorButton = React.createElement(
-				'form',
-				{ onSubmit: this.handlePlay },
-				React.createElement('input', { type: 'submit', className: 'button' })
-			);
-
 			if (this.state.gameState == 'START' || this.state.gameState == 'STOP') {
 				return React.createElement(
 					'div',
@@ -33162,9 +33156,10 @@
 					React.createElement(Room, {
 						team1: this.state.team1,
 						team2: this.state.team2,
-						onSubmit: this.handleSubmit,
+						onRoomChange: this.handleRoomChange,
+						onPlay: this.handlePlay,
+						isCreator: this.state.userId == this.state.creatorId,
 						gameMode: this.state.gameMode }),
-					this.state.userId == this.state.creatorId ? creatorButton : "",
 					React.createElement(Modal, {
 						message: this.state.modalMessage,
 						onSubmit: this.state.modalCallback })
@@ -48191,15 +48186,22 @@
 
 		handleTeamSubmit1: function (e) {
 			e.preventDefault();
-			this.props.onSubmit('team1');
+			this.props.onRoomChange('team1');
 		},
 
 		handleTeamSubmit2: function (e) {
 			e.preventDefault();
-			this.props.onSubmit('team2');
+			this.props.onRoomChange('team2');
 		},
 
 		render: function () {
+
+			var creatorButton = React.createElement(
+				'form',
+				{ onSubmit: this.props.onPlay },
+				React.createElement('input', { type: 'submit', className: 'button', style: { fontSize: '30px' } })
+			);
+
 			var team1 = [];
 			var team2 = [];
 
@@ -48218,44 +48220,61 @@
 			return React.createElement(
 				'div',
 				{ className: 'room' },
-				this.props.gameMode == 'BUGHOUSE' ? React.createElement(
-					'h1',
-					null,
-					'Team 1'
-				) : React.createElement(
-					'h1',
-					null,
-					'White'
+				React.createElement(
+					'div',
+					{ className: 'team' },
+					React.createElement(
+						'div',
+						{ className: 'team-title' },
+						this.props.gameMode == 'BUGHOUSE' ? React.createElement(
+							'h1',
+							null,
+							'Team 1'
+						) : React.createElement(
+							'h1',
+							null,
+							'White'
+						)
+					),
+					React.createElement(
+						'ul',
+						{ className: 'team-list' },
+						team1
+					),
+					React.createElement(
+						'form',
+						{ onSubmit: this.handleTeamSubmit1 },
+						this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 1', className: 'button' }) : React.createElement('input', { type: 'submit', value: 'Join White', className: 'button' })
+					)
 				),
 				React.createElement(
-					'ul',
-					{ className: 'teamList' },
-					team1
+					'div',
+					{ className: 'team' },
+					React.createElement(
+						'div',
+						{ className: 'team-title' },
+						this.props.gameMode == 'BUGHOUSE' ? React.createElement(
+							'h1',
+							null,
+							'Team 2'
+						) : React.createElement(
+							'h1',
+							null,
+							'Black'
+						)
+					),
+					React.createElement(
+						'ul',
+						{ className: 'team-list' },
+						team2
+					),
+					React.createElement(
+						'form',
+						{ onSubmit: this.handleTeamSubmit2 },
+						this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 2', className: 'button' }) : React.createElement('input', { type: 'submit', value: 'Join Black', className: 'button' })
+					)
 				),
-				React.createElement(
-					'form',
-					{ onSubmit: this.handleTeamSubmit1 },
-					this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 1' }) : React.createElement('input', { type: 'submit', value: 'Join White' })
-				),
-				this.props.gameMode == 'BUGHOUSE' ? React.createElement(
-					'h1',
-					null,
-					'Team 2'
-				) : React.createElement(
-					'h1',
-					null,
-					'Black'
-				),
-				React.createElement(
-					'ul',
-					{ className: 'teamList' },
-					team2
-				),
-				React.createElement(
-					'form',
-					{ onSubmit: this.handleTeamSubmit2 },
-					this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 2' }) : React.createElement('input', { type: 'submit', value: 'Join Black' })
-				)
+				this.props.isCreator ? creatorButton : ""
 			);
 		}
 	});
