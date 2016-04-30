@@ -6,13 +6,14 @@ var Timer = function (time, inc, boardNum, update, callback) {
 	function start () {
 		stop();
 		interval = setInterval(function () {
-			remainingTime -= 0.1;
+			remainingTime -= 1.0;
+			console.log("UPDATE", remainingTime);
 			update(remainingTime, boardNum);
 			if (remainingTime < 0.1) {
 				clearInterval(interval);
 				callback(boardNum);
 			}
-		}, 100);
+		}, 1000);
 	};
 	
 	function stop () {

@@ -28,11 +28,11 @@ var Game = React.createClass({
 			creatorId: '',
 			
 			boardNum: -1,
-			white: [],
-			black: [],
+			team1: [],
+			team2: [],
 			boards: [],
-			whiteTimes: [],
-			blackTimes: [],
+			teamTimers1: [],
+			teamTimer2: [],
 			
 			history: [],
 			
@@ -95,33 +95,33 @@ var Game = React.createClass({
 	},
 	
 	_gameTimeupdate: function (data) {
-		var newWhiteTimes = this.state.whiteTimes;
-		var newBlackTimes = this.state.blackTimes;
+		var newTeamTimers1 = this.state.teamTimers1;
+		var newTeamTimers2 = this.state.teamTimers2;
 		
 		if (data.color == 'b')
-			newBlackTimes[data.boardNum] = data.time;
+			newTeamTimers2[data.boardNum] = data.time;
 		else
-			newWhiteTimes[data.boardNum] = data.time;
+			newTeamTimers1[data.boardNum] = data.time;
 		
-		this.setState({blackTimes: newBlackTimes, whiteTimes: newWhiteTimes});
+		this.setState({teamTimers2: newTeamTimers2, teamTimers1: newTeamTimers1});
 	},
 	
 	_gameStart: function (data) {
 		var boards = [];
-		var whiteTimes = [];
-		var blackTimes = [];
+		var teamTimers1 = [];
+		var teamTimers2 = [];
 		for (var i = 0; i < data.numOfBoards; i++) {
 			boards.push(new Chess());
-			whiteTimes.push(data.time);
-			blackTimes.push(data.time);
+			teamTimers1.push(data.time);
+			teamTimers2.push(data.time);
 		}
 		
 		this.setState({
 			gameState: 'START',
 			boardNum: data.boardNum,
 			boards: boards,
-			whiteTimes: whiteTimes,
-			blackTimes: blackTimes
+			teamTimers1: teamTimers1,
+			teamTimers2: teamTimers2
 		});
 	},
 	
@@ -220,8 +220,8 @@ var Game = React.createClass({
 			});
 		}
 		this.setState({
-			white: data.white,
-			black: data.black
+			team1: data.team1,
+			team2: data.team2
 		});
 	},	
 	
@@ -245,10 +245,10 @@ var Game = React.createClass({
 		}
 	},
 	
-	handleSubmit: function (newColor) {
+	handleSubmit: function (newTeam) {
 		socket.emit('room:update', {
 			userId: this.state.userId,
-			newColor: newColor,
+			newTeam: newTeam,
 			token: this.props.token
 		});
 	},
@@ -256,12 +256,12 @@ var Game = React.createClass({
 	handlePlay: function (e) {
 		e.preventDefault();
 		
-		if (this.state.white.length != this.state.black.length) {
+		if (this.state.team1.length != this.state.team2.length) {
 			this.setState({modalMessage: 'Teams must be of equal size!'});
 			return;
 		}
 
-		if (this.state.gameMode == 'BUGHOUSE' && (this.state.white.length != 2 || this.state.black.length != 2)) {
+		if (this.state.gameMode == 'BUGHOUSE' && (this.state.team1.length != 2 || this.state.team2.length != 2)) {
 			this.setState({modalMessage: 'Teams must have two players each!'});
 			return;
 		}
@@ -274,13 +274,24 @@ var Game = React.createClass({
 	},
 	
 	getColor: function () {
-		for (var i = 0; i < this.state.white.length; i++)
-			if (this.state.white[i].userId == this.state.userId)
-				return 'w';
+		for (var i = 0; i < this.state.team1.length; i++)
+			if (this.state.team1[i].userId == this.state.userId) {
+				if (this.state.gameMode == 'BUGHOUSE') {
+					return i == 0 ? 'w' : 'b';
+				} else {
+					return 'w';
+				}
+			}
 		
-		for (var i = 0; i < this.state.black.length; i++)
-			if (this.state.black[i].userId == this.state.userId)
-				return 'b';
+		for (var i = 0; i < this.state.team2.length; i++) {
+			if (this.state.team2[i].userId == this.state.userId) {
+				if (this.state.gameMode == 'BUGHOUSE') {
+					return i == 0 ? 'b' : 'w';
+				} else {
+					return 'b';
+				}
+			}
+		}
 		return '';
 	},
 	
@@ -355,8 +366,10 @@ var Game = React.createClass({
 				<div className="game">
 					<div className="game-header">
 						<Clock 
-							whiteTime={this.state.whiteTimes[this.state.boardNum]}
-							blackTime={this.state.blackTimes[this.state.boardNum]}
+							teamTimers1={this.state.teamTimers1[this.state.boardNum]}
+							teamTimers2={this.state.teamTimers2[this.state.boardNum]}
+							boardNum={this.state.boardNum}
+							gameMode={this.state.gameMode}
 							turn={this.state.boards[this.state.boardNum].turn()}/>
 						<a className="button new-game" href="/" target="_blank">New Game</a>
 						<div className="clear"></div>
@@ -388,8 +401,8 @@ var Game = React.createClass({
 					<h1>Share this link with your friends: {window.location.href}</h1> 
 					<h1>Your current username is {this.state.username}</h1>
 					<Room 
-						white={this.state.white} 
-						black={this.state.black} 
+						team1={this.state.team1} 
+						team2={this.state.team2} 
 						onSubmit={this.handleSubmit}
 						gameMode={this.state.gameMode}/>
 					

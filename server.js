@@ -75,7 +75,7 @@ io.on('connection', function (socket) {
 		if (games.get(token) == null)
 			return;
 		
-		games = games.updateIn([token, 'white'], function (players) {
+		games = games.updateIn([token, 'team1'], function (players) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -85,7 +85,7 @@ io.on('connection', function (socket) {
 			return players;
 		});
 		
-		games = games.updateIn([token, 'black'], function (players) {
+		games = games.updateIn([token, 'team2'], function (players) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == socket.id) {
 					players = players.delete(i);
@@ -95,38 +95,38 @@ io.on('connection', function (socket) {
 			return players;
 		});
 		
-		var white = []
-		var black = []
+		var team1 = []
+		var team2 = []
 		
-		for (var i = 0; i < games.getIn([token, 'white']).size; i++) {
-			var userId = games.getIn([token, 'white']).get(i).id; 
-			white.push({
+		for (var i = 0; i < games.getIn([token, 'team1']).size; i++) {
+			var userId = games.getIn([token, 'team1']).get(i).id; 
+			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
 		
-		for (var i = 0; i < games.getIn([token, 'black']).size; i++) {
-			var userId = games.getIn([token, 'black']).get(i).id;
-			black.push({
+		for (var i = 0; i < games.getIn([token, 'team2']).size; i++) {
+			var userId = games.getIn([token, 'team2']).get(i).id;
+			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
 		
 		io.to(token).emit('room:update', {
-			white: white,
-			black: black
+			team1: team1,
+			team2: team2
 		});
 		
 		if (games.getIn([token, 'creator']) != null && games.getIn([token, 'creator']).id == socket.id) {
-			games = games.updateIn([token, 'blackTimers'], function (list) {
+			games = games.updateIn([token, 'teamTimers2'], function (list) {
 				for (var i = 0; i < list.size; i++)
 					list.get(i).stop();
 				return list;
 			});
 			
-			games = games.updateIn([token, 'whiteTimers'], function (list) {
+			games = games.updateIn([token, 'teamTimers1'], function (list) {
 				for (var i = 0; i < list.size; i++)
 					list.get(i).stop();
 				return list;
@@ -174,11 +174,11 @@ io.on('connection', function (socket) {
 		});
 		
 		if (data.color == 'b') {
-			games.getIn([data.token, 'whiteTimers', data.boardNum]).start();
-			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).start();
+			games.getIn([data.token, 'teamTimers2', data.boardNum]).stop();
 		} else if (data.color == 'w') {
-			games.getIn([data.token, 'blackTimers', data.boardNum]).start();
-			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
+			games.getIn([data.token, 'teamTimers2', data.boardNum]).start();
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).stop();
 		}
 	});
 	
@@ -206,44 +206,44 @@ io.on('connection', function (socket) {
 		});
 		
 		if (data.color == 'b') {
-			games.getIn([data.token, 'whiteTimers', data.boardNum]).start();
-			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).start();
+			games.getIn([data.token, 'teamTimers2', data.boardNum]).stop();
 		} else if (data.color == 'w') {
-			games.getIn([data.token, 'blackTimers', data.boardNum]).start();
-			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).start();
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).stop();
 		}
 	});
 	
 	socket.on('game:end', function (data) {
-		if (games.getIn([data.token, 'whiteTimers', data.boardNum]) != null)
-			games.getIn([data.token, 'whiteTimers', data.boardNum]).stop();
-		if (games.getIn([data.token, 'blackTimers', data.boardNum]) != null)
-			games.getIn([data.token, 'blackTimers', data.boardNum]).stop();
+		if (games.getIn([data.token, 'teamTimers1', data.boardNum]) != null)
+			games.getIn([data.token, 'teamTimers1', data.boardNum]).stop();
+		if (games.getIn([data.token, 'teamTimers2', data.boardNum]) != null)
+			games.getIn([data.token, 'teamTimers2', data.boardNum]).stop();
 	});
 	
 	socket.on('game:start', function (data) {
 		
-		var numOfBoards = games.getIn([data.token, 'white']).size;
+		var numOfBoards = games.getIn([data.token, 'team1']).size;
 		
 		var game = games.get(data.token);
 		var time = game.get('time');
 		var inc = game.get('inc');
 		
-		for (var i = 0; i < game.get('white').size; i++) {
-			game.get('white').get(i).emit('game:start', {
+		for (var i = 0; i < game.get('team1').size; i++) {
+			game.get('team1').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
 				inc: inc
 			});
-			game.get('black').get(i).emit('game:start', {
+			game.get('team2').get(i).emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
 				inc: inc
 			});
 			
-			games = games.updateIn([data.token, 'whiteTimers'], function (list) {
+			games = games.updateIn([data.token, 'teamTimers1'], function (list) {
 				list = list.push(new Timer(time, inc, i, function (time, boardNum) {
 					io.to(data.token).emit('game:timeupdate', {
 						boardNum: boardNum,
@@ -259,7 +259,7 @@ io.on('connection', function (socket) {
 				return list;
 			});
 			
-			games = games.updateIn([data.token, 'blackTimers'], function (list) {
+			games = games.updateIn([data.token, 'teamTimers2'], function (list) {
 				list = list.push(new Timer(time, inc, i, function (time, boardNum) {
 					io.to(data.token).emit('game:timeupdate', {
 						boardNum: boardNum,
@@ -299,10 +299,10 @@ io.on('connection', function (socket) {
 			inc: data.inc,
 			roomSize: data.teamSize * 2,
 			gameMode: data.gameMode,
-			white: List(),
-			black: List(),
-			whiteTimers: List(),
-			blackTimers: List(),
+			team1: List(),
+			team2: List(),
+			teamTimers1: List(),
+			teamTimers2: List(),
 			boards: List(),
 			timeout: timeout
 		}));
@@ -319,7 +319,7 @@ io.on('connection', function (socket) {
 			return;
 		}
 
-		var playerCnt = game.get('white').size + game.get('black').size;
+		var playerCnt = game.get('team1').size + game.get('team2').size;
 		
 		if (playerCnt >= game.get('roomSize')) {
 			console.log("Room is full");
@@ -350,7 +350,7 @@ io.on('connection', function (socket) {
 		});
 		
 		console.log("Updating players");
-		games = games.updateIn([data.token, 'white'], function (players) {
+		games = games.updateIn([data.token, 'team1'], function (players) {
 			players = players.push(socket);
 			return players;
 		});
@@ -364,36 +364,34 @@ io.on('connection', function (socket) {
 		});
 		
 		
-		var white = []
-		var black = []
+		var team1 = []
+		var team2 = []
 		
-		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++) {
-			var userId = games.getIn([data.token, 'white']).get(i).id; 
-			white.push({
+		for (var i = 0; i < games.getIn([data.token, 'team1']).size; i++) {
+			var userId = games.getIn([data.token, 'team1']).get(i).id; 
+			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
 		
-		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++) {
-			var userId = games.getIn([data.token, 'black']).get(i).id;
-			black.push({
+		for (var i = 0; i < games.getIn([data.token, 'team2']).size; i++) {
+			var userId = games.getIn([data.token, 'team2']).get(i).id;
+			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
-		
-		console.log(white, black);
 		
 		io.to(data.token).emit('room:update', {
-			white: white,
-			black: black
+			team1: team1,
+			team2: team2
 		});
 	});
 	
 	socket.on('room:update', function (data) {
 		var socketToAdd;
-		games = games.updateIn([data.token, 'white'], function (players) {
+		games = games.updateIn([data.token, 'team1'], function (players) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == data.userId) {
 					socketToAdd = players.get(i);
@@ -403,7 +401,7 @@ io.on('connection', function (socket) {
 			return players;
 		});
 		
-		games = games.updateIn([data.token, 'black'], function (players) {
+		games = games.updateIn([data.token, 'team2'], function (players) {
 			for (var i = 0; i < players.size; i++) {
 				if (players.get(i).id == data.userId) {
 					socketToAdd = players.get(i);
@@ -413,33 +411,33 @@ io.on('connection', function (socket) {
 			return players;
 		});
 
-		games = games.updateIn([data.token, data.newColor], function (players) {
+		games = games.updateIn([data.token, data.newTeam], function (players) {
 			players = players.push(socketToAdd);
 			return players;
 		});
 		
-		var white = []
-		var black = []
+		var team1 = []
+		var team2 = []
 		
-		for (var i = 0; i < games.getIn([data.token, 'white']).size; i++) {
-			var userId = games.getIn([data.token, 'white']).get(i).id; 
-			white.push({
+		for (var i = 0; i < games.getIn([data.token, 'team1']).size; i++) {
+			var userId = games.getIn([data.token, 'team1']).get(i).id; 
+			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
 		
-		for (var i = 0; i < games.getIn([data.token, 'black']).size; i++) {
-			var userId = games.getIn([data.token, 'black']).get(i).id;
-			black.push({
+		for (var i = 0; i < games.getIn([data.token, 'team2']).size; i++) {
+			var userId = games.getIn([data.token, 'team2']).get(i).id;
+			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
 			});
 		}
 		
 		io.to(data.token).emit('room:update', {
-			white: white,
-			black: black
+			team1: team1,
+			team2: team2
 		});
 	});
 });

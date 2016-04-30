@@ -32773,11 +32773,11 @@
 				creatorId: '',
 
 				boardNum: -1,
-				white: [],
-				black: [],
+				team1: [],
+				team2: [],
 				boards: [],
-				whiteTimes: [],
-				blackTimes: [],
+				teamTimers1: [],
+				teamTimer2: [],
 
 				history: [],
 
@@ -32837,30 +32837,30 @@
 		},
 
 		_gameTimeupdate: function (data) {
-			var newWhiteTimes = this.state.whiteTimes;
-			var newBlackTimes = this.state.blackTimes;
+			var newTeamTimers1 = this.state.teamTimers1;
+			var newTeamTimers2 = this.state.teamTimers2;
 
-			if (data.color == 'b') newBlackTimes[data.boardNum] = data.time;else newWhiteTimes[data.boardNum] = data.time;
+			if (data.color == 'b') newTeamTimers2[data.boardNum] = data.time;else newTeamTimers1[data.boardNum] = data.time;
 
-			this.setState({ blackTimes: newBlackTimes, whiteTimes: newWhiteTimes });
+			this.setState({ teamTimers2: newTeamTimers2, teamTimers1: newTeamTimers1 });
 		},
 
 		_gameStart: function (data) {
 			var boards = [];
-			var whiteTimes = [];
-			var blackTimes = [];
+			var teamTimers1 = [];
+			var teamTimers2 = [];
 			for (var i = 0; i < data.numOfBoards; i++) {
 				boards.push(new Chess());
-				whiteTimes.push(data.time);
-				blackTimes.push(data.time);
+				teamTimers1.push(data.time);
+				teamTimers2.push(data.time);
 			}
 
 			this.setState({
 				gameState: 'START',
 				boardNum: data.boardNum,
 				boards: boards,
-				whiteTimes: whiteTimes,
-				blackTimes: blackTimes
+				teamTimers1: teamTimers1,
+				teamTimers2: teamTimers2
 			});
 		},
 
@@ -32959,8 +32959,8 @@
 				});
 			}
 			this.setState({
-				white: data.white,
-				black: data.black
+				team1: data.team1,
+				team2: data.team2
 			});
 		},
 
@@ -32984,10 +32984,10 @@
 			}
 		},
 
-		handleSubmit: function (newColor) {
+		handleSubmit: function (newTeam) {
 			socket.emit('room:update', {
 				userId: this.state.userId,
-				newColor: newColor,
+				newTeam: newTeam,
 				token: this.props.token
 			});
 		},
@@ -32995,12 +32995,12 @@
 		handlePlay: function (e) {
 			e.preventDefault();
 
-			if (this.state.white.length != this.state.black.length) {
+			if (this.state.team1.length != this.state.team2.length) {
 				this.setState({ modalMessage: 'Teams must be of equal size!' });
 				return;
 			}
 
-			if (this.state.gameMode == 'BUGHOUSE' && (this.state.white.length != 2 || this.state.black.length != 2)) {
+			if (this.state.gameMode == 'BUGHOUSE' && (this.state.team1.length != 2 || this.state.team2.length != 2)) {
 				this.setState({ modalMessage: 'Teams must have two players each!' });
 				return;
 			}
@@ -33013,9 +33013,23 @@
 		},
 
 		getColor: function () {
-			for (var i = 0; i < this.state.white.length; i++) if (this.state.white[i].userId == this.state.userId) return 'w';
+			for (var i = 0; i < this.state.team1.length; i++) if (this.state.team1[i].userId == this.state.userId) {
+				if (this.state.gameMode == 'BUGHOUSE') {
+					return i == 0 ? 'w' : 'b';
+				} else {
+					return 'w';
+				}
+			}
 
-			for (var i = 0; i < this.state.black.length; i++) if (this.state.black[i].userId == this.state.userId) return 'b';
+			for (var i = 0; i < this.state.team2.length; i++) {
+				if (this.state.team2[i].userId == this.state.userId) {
+					if (this.state.gameMode == 'BUGHOUSE') {
+						return i == 0 ? 'b' : 'w';
+					} else {
+						return 'b';
+					}
+				}
+			}
 			return '';
 		},
 
@@ -33088,8 +33102,10 @@
 						'div',
 						{ className: 'game-header' },
 						React.createElement(Clock, {
-							whiteTime: this.state.whiteTimes[this.state.boardNum],
-							blackTime: this.state.blackTimes[this.state.boardNum],
+							teamTimers1: this.state.teamTimers1[this.state.boardNum],
+							teamTimers2: this.state.teamTimers2[this.state.boardNum],
+							boardNum: this.state.boardNum,
+							gameMode: this.state.gameMode,
 							turn: this.state.boards[this.state.boardNum].turn() }),
 						React.createElement(
 							'a',
@@ -33144,8 +33160,8 @@
 						this.state.username
 					),
 					React.createElement(Room, {
-						white: this.state.white,
-						black: this.state.black,
+						team1: this.state.team1,
+						team2: this.state.team2,
 						onSubmit: this.handleSubmit,
 						gameMode: this.state.gameMode }),
 					this.state.userId == this.state.creatorId ? creatorButton : "",
@@ -48173,36 +48189,40 @@
 	var Room = React.createClass({
 		displayName: 'Room',
 
-		handleWhiteSubmit: function (e) {
+		handleTeamSubmit1: function (e) {
 			e.preventDefault();
-			this.props.onSubmit('white');
+			this.props.onSubmit('team1');
 		},
 
-		handleBlackSubmit: function (e) {
+		handleTeamSubmit2: function (e) {
 			e.preventDefault();
-			this.props.onSubmit('black');
+			this.props.onSubmit('team2');
 		},
 
 		render: function () {
-			var white = [];
-			var black = [];
+			var team1 = [];
+			var team2 = [];
 
-			for (var i = 0; i < this.props.white.length; i++) white.push(React.createElement(
+			for (var i = 0; i < this.props.team1.length; i++) team1.push(React.createElement(
 				'li',
-				{ key: this.props.white[i].username },
-				this.props.white[i].username
+				{ key: this.props.team1[i].username },
+				this.props.team1[i].username
 			));
 
-			for (var i = 0; i < this.props.black.length; i++) black.push(React.createElement(
+			for (var i = 0; i < this.props.team2.length; i++) team2.push(React.createElement(
 				'li',
-				{ key: this.props.black[i].username },
-				this.props.black[i].username
+				{ key: this.props.team2[i].username },
+				this.props.team2[i].username
 			));
 
 			return React.createElement(
 				'div',
 				{ className: 'room' },
-				React.createElement(
+				this.props.gameMode == 'BUGHOUSE' ? React.createElement(
+					'h1',
+					null,
+					'Team 1'
+				) : React.createElement(
 					'h1',
 					null,
 					'White'
@@ -48210,14 +48230,18 @@
 				React.createElement(
 					'ul',
 					{ className: 'teamList' },
-					white
+					team1
 				),
 				React.createElement(
 					'form',
-					{ onSubmit: this.handleWhiteSubmit },
-					React.createElement('input', { type: 'submit', value: 'Join White' })
+					{ onSubmit: this.handleTeamSubmit1 },
+					this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 1' }) : React.createElement('input', { type: 'submit', value: 'Join White' })
 				),
-				React.createElement(
+				this.props.gameMode == 'BUGHOUSE' ? React.createElement(
+					'h1',
+					null,
+					'Team 2'
+				) : React.createElement(
 					'h1',
 					null,
 					'Black'
@@ -48225,12 +48249,12 @@
 				React.createElement(
 					'ul',
 					{ className: 'teamList' },
-					black
+					team2
 				),
 				React.createElement(
 					'form',
-					{ onSubmit: this.handleBlackSubmit },
-					React.createElement('input', { type: 'submit', value: 'Join Black' })
+					{ onSubmit: this.handleTeamSubmit2 },
+					this.props.gameMode == 'BUGHOUSE' ? React.createElement('input', { type: 'submit', value: 'Join Team 2' }) : React.createElement('input', { type: 'submit', value: 'Join Black' })
 				)
 			);
 		}
@@ -48248,20 +48272,35 @@
 	var Clock = React.createClass({
 		displayName: 'Clock',
 
-
 		render: function () {
+
+			var whiteTime, blackTime;
+
+			if (this.props.gameMode == 'BUGHOUSE') {
+				if (this.props.boardNum == 0) {
+					whiteTime = Functions.getTime(this.props.teamTimers1);
+					blackTime = Functions.getTime(this.props.teamTimers2);
+				} else {
+					whiteTime = Functions.getTime(this.props.teamTimers2);
+					blackTime = Functions.getTime(this.props.teamTimers1);
+				}
+			} else {
+				whiteTime = Functions.getTime(this.props.teamTimers1);
+				blackTime = Functions.getTime(this.props.teamTimers2);
+			}
+
 			return React.createElement(
 				'div',
 				{ className: 'clock' },
 				React.createElement(
 					'div',
 					{ className: "white-time " + (this.props.turn == 'w' ? 'active' : '') },
-					Functions.getTime(this.props.whiteTime)
+					whiteTime
 				),
 				React.createElement(
 					'div',
 					{ className: "black-time " + (this.props.turn == 'b' ? 'active' : '') },
-					Functions.getTime(this.props.blackTime)
+					blackTime
 				)
 			);
 		}
