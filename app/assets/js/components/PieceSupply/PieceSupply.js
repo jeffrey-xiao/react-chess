@@ -8,17 +8,25 @@ module.exports = React.createClass({
 	handleClick: function (piece, pieceCount) {
 		if (this.props.currColor == this.props.color && pieceCount > 0) {
 			this.props.onClick(piece);
+		} else {
+			this.props.clearPiece();
 		}
 	},
 	
 	handleDrag: function (piece, pieceCount) {
-		if (this.props.currColor == this.props.color && pieceCount > 0)
+		if (this.props.currColor == this.props.color && pieceCount > 0) {
 			this.props.onDrag(piece);
+		} else {
+			this.props.clearPiece();
+		}
 	},
 	
 	handleDrop: function (piece, pieceCount) {
-		if (this.props.currColor == this.props.color && pieceCount > 0)
+		if (this.props.currColor == this.props.color && pieceCount > 0) {
 			this.props.onDrop(piece);
+		} else {
+			this.props.clearPiece();
+		}
 	},
 	
 	render: function () {

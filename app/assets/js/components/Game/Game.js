@@ -143,7 +143,8 @@ var Game = React.createClass({
 	_gameMoved: function (data) {
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
-		this.setState({boards: newBoards, lastSquares: [data.from, data.to]});
+		if (data.boardNum == this.state.boardNum)
+			this.setState({boards: newBoards, lastSquares: [data.from, data.to]});
 		
 		if (data.piece != null) {
 			if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {

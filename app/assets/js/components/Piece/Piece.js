@@ -17,11 +17,18 @@ function collectTarget (connect, monitor) {
 
 var pieceSource = {
 	beginDrag: function (props) {
+		console.log(props.color, props.piece.color);
+		if (props.color != props.piece.color) {
+			props.clearPiece();
+			return {};
+		}
 		props.onDrag(props.row, props.col);
 		return {};
 	},
 	
 	endDrag: function (props) {
+		if (props.color != props.piece.color)
+			return;
 		props.onDrop();	
 	},
 };

@@ -32882,7 +32882,7 @@
 		_gameMoved: function (data) {
 			var newBoards = this.state.boards;
 			newBoards[data.boardNum] = new Chess(data.fen);
-			this.setState({ boards: newBoards, lastSquares: [data.from, data.to] });
+			if (data.boardNum == this.state.boardNum) this.setState({ boards: newBoards, lastSquares: [data.from, data.to] });
 
 			if (data.piece != null) {
 				if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
@@ -38301,6 +38301,10 @@
 			this.setState({ activeRow: -1, activeCol: -1 });
 		},
 
+		clearPiece: function () {
+			this.setState({ activeRow: -1, activeCol: -1, activePiece: '' });
+		},
+
 		render: function () {
 			var children = [];
 
@@ -38355,7 +38359,9 @@
 							piece: this.props.board.get(square),
 							onDrag: this.handlePieceDrag,
 							onDrop: this.handlePieceDrop,
-							onClick: this.handleSquareClick }));
+							onClick: this.handleSquareClick,
+							color: this.props.color,
+							clearPiece: this.clearPiece }));
 					}
 				}
 			}
@@ -38373,7 +38379,8 @@
 					activePiece: this.state.activePiece,
 					onClick: this.handleSupplyClick,
 					onDrag: this.handleSupplyDrag,
-					onDrop: this.handleSupplyDrop }),
+					onDrop: this.handleSupplyDrop,
+					clearPiece: this.clearPiece }),
 				React.createElement(
 					'div',
 					{ className: 'board' },
@@ -38387,7 +38394,8 @@
 					pieces: this.props.pieces[yourColor],
 					onClick: this.handleSupplyClick,
 					onDrag: this.handleSupplyDrag,
-					onDrop: this.handleSupplyDrop })
+					onDrop: this.handleSupplyDrop,
+					clearPiece: this.clearPiece })
 			);
 		}
 	});
@@ -44172,15 +44180,25 @@
 		handleClick: function (piece, pieceCount) {
 			if (this.props.currColor == this.props.color && pieceCount > 0) {
 				this.props.onClick(piece);
+			} else {
+				this.props.clearPiece();
 			}
 		},
 
 		handleDrag: function (piece, pieceCount) {
-			if (this.props.currColor == this.props.color && pieceCount > 0) this.props.onDrag(piece);
+			if (this.props.currColor == this.props.color && pieceCount > 0) {
+				this.props.onDrag(piece);
+			} else {
+				this.props.clearPiece();
+			}
 		},
 
 		handleDrop: function (piece, pieceCount) {
-			if (this.props.currColor == this.props.color && pieceCount > 0) this.props.onDrop(piece);
+			if (this.props.currColor == this.props.color && pieceCount > 0) {
+				this.props.onDrop(piece);
+			} else {
+				this.props.clearPiece();
+			}
 		},
 
 		render: function () {
@@ -44275,11 +44293,17 @@
 
 	var pieceSource = {
 		beginDrag: function (props) {
+			console.log(props.color, props.piece.color);
+			if (props.color != props.piece.color) {
+				props.clearPiece();
+				return {};
+			}
 			props.onDrag(props.row, props.col);
 			return {};
 		},
 
 		endDrag: function (props) {
+			if (props.color != props.piece.color) return;
 			props.onDrop();
 		}
 	};

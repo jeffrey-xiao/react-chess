@@ -7,7 +7,6 @@ var Timer = function (time, inc, boardNum, update, callback) {
 		stop();
 		interval = setInterval(function () {
 			remainingTime -= 1.0;
-			console.log("UPDATE", remainingTime);
 			update(remainingTime, boardNum);
 			if (remainingTime < 0.1) {
 				clearInterval(interval);

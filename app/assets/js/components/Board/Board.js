@@ -132,6 +132,10 @@ var Board = React.createClass({
 		this.setState({activeRow: -1, activeCol: -1});
 	},
 	
+	clearPiece: function () {
+		this.setState({activeRow: -1, activeCol: -1, activePiece: ''});	
+	},
+	
 	render: function () {
 		var children = [];
 
@@ -191,7 +195,9 @@ var Board = React.createClass({
 							piece={this.props.board.get(square)}
 							onDrag={this.handlePieceDrag}
 							onDrop={this.handlePieceDrop}
-							onClick={this.handleSquareClick}/>
+							onClick={this.handleSquareClick}
+							color={this.props.color}
+							clearPiece={this.clearPiece}/>
 					);
 				}
 			}
@@ -209,7 +215,8 @@ var Board = React.createClass({
 					activePiece={this.state.activePiece}
 					onClick={this.handleSupplyClick}
 					onDrag={this.handleSupplyDrag}
-					onDrop={this.handleSupplyDrop}/>
+					onDrop={this.handleSupplyDrop}
+					clearPiece={this.clearPiece}/>
 				<div className="board">
 					{children}
 					<div className="clear"></div>
@@ -221,7 +228,8 @@ var Board = React.createClass({
 					pieces={this.props.pieces[yourColor]}
 					onClick={this.handleSupplyClick}
 					onDrag={this.handleSupplyDrag}
-					onDrop={this.handleSupplyDrop}/>
+					onDrop={this.handleSupplyDrop}
+					clearPiece={this.clearPiece}/>
 			</div>
 		);
 	}

@@ -153,13 +153,31 @@ io.on('connection', function (socket) {
 	socket.on('game:move', function (data) {
 		console.log("BOARD MOVED", data.from, data.to, data.color);
 		
+		var isPromoted = games.getIn([data.token, 'isPromoted']);
+		
+		var fromCol = data.from.charCodeAt(0) - 97;
+		var fromRow = data.from.charCodeAt(1) - 49;
+		var toCol = data.to.charCodeAt(0) - 97;
+		var toRow = data.to.charCodeAt(1) - 49;
+		
 		var piece = null;
 		var color = null;
 		
+		console.log(isPromoted);
+		console.log(fromRow, fromCol, toRow, toCol);
+		
 		if (games.getIn([data.token, 'boards', data.boardNum]).get(data.to) != null) {
 			piece = games.getIn([data.token, 'boards', data.boardNum]).get(data.to).type;
+			if (isPromoted[toRow][toCol])
+				piece = 'p';
 			color = games.getIn([data.token, 'boards', data.boardNum]).turn();
 		}
+		
+		if (isPromoted[fromRow][fromCol] || ((toRow == 0 || toRow == 7) && games.getIn([data.token, 'boards', data.boardNum]).get(data.from).type == 'p'))
+			isPromoted[toRow][toCol] = true;
+		console.log("AFTER ", isPromoted);
+		console.log(games.getIn([data.token, 'boards', data.boardNum]).get(data.from).type == 'p');
+		isPromoted[fromRow][fromCol] = false;
 		
 		var san = games.getIn([data.token, 'boards', data.boardNum]).move({
 			from: data.from,
@@ -184,6 +202,11 @@ io.on('connection', function (socket) {
 			games.getIn([data.token, 'teamTimers2', data.boardNum]).start();
 			games.getIn([data.token, 'teamTimers1', data.boardNum]).stop();
 		}
+		
+		games = games.updateIn([data.token, 'isPromoted'], function (arr) {
+			arr = isPromoted;
+			return arr;
+		})
 	});
 	
 	socket.on('game:place', function (data) {
@@ -284,16 +307,22 @@ io.on('connection', function (socket) {
 				list = list.push(new Chess());
 				return list;
 			});
+			
+			games = games.updateIn([data.token, 'isPromoted'], function (arr) {
+				for (var row = 0; row < 8; row++)
+					arr.push(new Array(8));
+				for (var row = 0; row < 8; row++)
+					for (var col = 0; col < 8; col++)
+						arr[row][col] = false;
+				return arr;
+			});
 		}
 		
 		clearTimeout(games.getIn([data.token, 'timeout']));
 		games = games.updateIn([data.token, 'state'], function (state) {
-			console.log("STATE IS", state);
 			state = 'STARTED';
 			return state;
 		});
-		
-		console.log("GAME IS", games.getIn([data.token, 'state']));
 	});
 	
 	socket.on('room:create', function (data) {
@@ -316,6 +345,7 @@ io.on('connection', function (socket) {
 			teamTimers1: List(),
 			teamTimers2: List(),
 			boards: List(),
+			isPromoted: [[]],
 			timeout: timeout,
 			state: 'WAITING'
 		}));
@@ -345,7 +375,6 @@ io.on('connection', function (socket) {
 			socket.emit('room:alreadyStarted');
 		}
 		
-		console.log("Actually joining with socket");
 		socket.join(data.token);
 		
 		var username;
