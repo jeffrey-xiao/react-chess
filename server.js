@@ -78,9 +78,9 @@ io.on('connection', function (socket) {
 		
 		games = games.updateIn([token, 'team1'], function (players) {
 			for (var i = 0; i < players.size; i++) {
-				if (players.get(i).id == socket.id) {
+				if (players.get(i).get('socket').id == socket.id) {
+					boardNum = players.get(i).get('boardNum');
 					players = players.delete(i);
-					boardNum = i;
 					break;
 				}
 			}
@@ -89,9 +89,9 @@ io.on('connection', function (socket) {
 		
 		games = games.updateIn([token, 'team2'], function (players) {
 			for (var i = 0; i < players.size; i++) {
-				if (players.get(i).id == socket.id) {
+				if (players.get(i).get('socket').id == socket.id) {
+					boardNum = players.get(i).get('boardNum');
 					players = players.delete(i);
-					boardNum = i;
 					break;
 				}
 			}
@@ -102,7 +102,7 @@ io.on('connection', function (socket) {
 		var team2 = []
 		
 		for (var i = 0; i < games.getIn([token, 'team1']).size; i++) {
-			var userId = games.getIn([token, 'team1']).get(i).id; 
+			var userId = games.getIn([token, 'team1', i, 'socket']).id; 
 			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
@@ -110,7 +110,7 @@ io.on('connection', function (socket) {
 		}
 		
 		for (var i = 0; i < games.getIn([token, 'team2']).size; i++) {
-			var userId = games.getIn([token, 'team2']).get(i).id;
+			var userId = games.getIn([token, 'team2', i, 'socket']).id; 
 			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
@@ -258,17 +258,35 @@ io.on('connection', function (socket) {
 		var inc = game.get('inc');
 		
 		for (var i = 0; i < game.get('team1').size; i++) {
-			game.get('team1').get(i).emit('game:start', {
+			game.get('team1').get(i).get('socket').emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
 				inc: inc
 			});
-			game.get('team2').get(i).emit('game:start', {
+			game.get('team2').get(i).get('socket').emit('game:start', {
 				boardNum: i, 
 				numOfBoards: numOfBoards,
 				time: time,
 				inc: inc
+			});
+			
+			games = games.updateIn([data.token, 'team1'], function (list) {
+				for (var i = 0; i < list.size; i++)
+					list = list.updateIn([i, 'boardNum'], function (boardNum) {
+						boardNum = i;
+						return boardNum;
+					});
+				return list;
+			});
+			
+			games = games.updateIn([data.token, 'team2'], function (list) {
+				for (var i = 0; i < list.size; i++)
+					list = list.updateIn([i, 'boardNum'], function (boardNum) {
+						boardNum = i;
+						return boardNum;
+					});
+				return list;
 			});
 			
 			games = games.updateIn([data.token, 'teamTimers1'], function (list) {
@@ -398,7 +416,10 @@ io.on('connection', function (socket) {
 		
 		console.log("Updating players");
 		games = games.updateIn([data.token, 'team1'], function (players) {
-			players = players.push(socket);
+			players = players.push(Map({
+				socket: socket,
+				boardNum: 0
+			}));
 			return players;
 		});
 		
@@ -415,7 +436,7 @@ io.on('connection', function (socket) {
 		var team2 = []
 		
 		for (var i = 0; i < games.getIn([data.token, 'team1']).size; i++) {
-			var userId = games.getIn([data.token, 'team1']).get(i).id; 
+			var userId = games.getIn([data.token, 'team1', i, 'socket']).id; 
 			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
@@ -423,7 +444,7 @@ io.on('connection', function (socket) {
 		}
 		
 		for (var i = 0; i < games.getIn([data.token, 'team2']).size; i++) {
-			var userId = games.getIn([data.token, 'team2']).get(i).id;
+			var userId = games.getIn([data.token, 'team2', i, 'socket']).id; 
 			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
@@ -437,11 +458,11 @@ io.on('connection', function (socket) {
 	});
 	
 	socket.on('room:update', function (data) {
-		var socketToAdd;
+		var playerToAdd;
 		games = games.updateIn([data.token, 'team1'], function (players) {
 			for (var i = 0; i < players.size; i++) {
-				if (players.get(i).id == data.userId) {
-					socketToAdd = players.get(i);
+				if (players.get(i).get('socket').id == data.userId) {
+					playerToAdd = players.get(i);
 					players = players.delete(i);
 				}
 			}
@@ -450,8 +471,8 @@ io.on('connection', function (socket) {
 		
 		games = games.updateIn([data.token, 'team2'], function (players) {
 			for (var i = 0; i < players.size; i++) {
-				if (players.get(i).id == data.userId) {
-					socketToAdd = players.get(i);
+				if (players.get(i).get('socket').id == data.userId) {
+					playerToAdd = players.get(i);
 					players = players.delete(i);
 				}
 			}
@@ -459,7 +480,7 @@ io.on('connection', function (socket) {
 		});
 
 		games = games.updateIn([data.token, data.newTeam], function (players) {
-			players = players.push(socketToAdd);
+			players = players.push(playerToAdd);
 			return players;
 		});
 		
@@ -467,7 +488,7 @@ io.on('connection', function (socket) {
 		var team2 = []
 		
 		for (var i = 0; i < games.getIn([data.token, 'team1']).size; i++) {
-			var userId = games.getIn([data.token, 'team1']).get(i).id; 
+			var userId = games.getIn([data.token, 'team1', i, 'socket']).id; 
 			team1.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
@@ -475,7 +496,7 @@ io.on('connection', function (socket) {
 		}
 		
 		for (var i = 0; i < games.getIn([data.token, 'team2']).size; i++) {
-			var userId = games.getIn([data.token, 'team2']).get(i).id;
+			var userId = games.getIn([data.token, 'team2', i, 'socket']).id; 
 			team2.push({
 				userId: userId,
 				username: players.getIn([userId, 'username'])
