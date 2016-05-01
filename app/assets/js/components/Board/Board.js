@@ -148,25 +148,33 @@ var Board = React.createClass({
 		}
 
 		if (this.props.color == 'w') {
-			for (var row = 7; row >= 0; row--) 
-				for (var col = 0; col < 8; col++)
+			for (var row = 7; row >= 0; row--) {
+				for (var col = 0; col < 8; col++) {
+					var square = Functions.toCode(row, col);
 					children.push(<Square 
 									row={row}
 									col={col}
 									active={row == this.state.activeRow && col == this.state.activeCol}
 									possible={validSquares.indexOf(Functions.toCode(row, col)) > -1}
 									key={row * 8 + col}
-									onClick={this.handleSquareClick}/>);
+									onClick={this.handleSquareClick}
+									lastSquare={this.props.lastSquares.indexOf(square) > -1}/>);
+				}
+			}
 		} else {
-			for (var row = 0; row < 8; row++) 
-				for (var col = 7; col >= 0; col--)
+			for (var row = 0; row < 8; row++) {
+				for (var col = 7; col >= 0; col--) {
+					var square = Functions.toCode(row, col);
 					children.push(<Square 
 									row={row}
 									col={col}
 									active={row == this.state.activeRow && col == this.state.activeCol}
 									possible={validSquares.indexOf(Functions.toCode(row, col)) > -1}
 									key={row * 8 + col}
-									onClick={this.handleSquareClick}/>);
+									onClick={this.handleSquareClick}
+									lastSquare={this.props.lastSquares.indexOf(square) > -1}/>);
+				}
+			}
 		}
 		
 		for (var row = 0; row < 8; row++) {

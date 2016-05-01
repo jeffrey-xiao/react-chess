@@ -206,7 +206,8 @@ io.on('connection', function (socket) {
 			color: data.color,
 			boardNum: data.boardNum,
 			fen: games.getIn([data.token, 'boards', data.boardNum]).fen(),
-			san: san
+			san: san,
+			pos: data.pos
 		});
 		
 		if (data.color == 'b') {
@@ -286,6 +287,13 @@ io.on('connection', function (socket) {
 		}
 		
 		clearTimeout(games.getIn([data.token, 'timeout']));
+		games = games.updateIn([data.token, 'state'], function (state) {
+			console.log("STATE IS", state);
+			state = 'STARTED';
+			return state;
+		});
+		
+		console.log("GAME IS", games.getIn([data.token, 'state']));
 	});
 	
 	socket.on('room:create', function (data) {
@@ -308,7 +316,8 @@ io.on('connection', function (socket) {
 			teamTimers1: List(),
 			teamTimers2: List(),
 			boards: List(),
-			timeout: timeout
+			timeout: timeout,
+			state: 'WAITING'
 		}));
 		
 		socket.emit('room:created', {token: data.token});
@@ -329,6 +338,11 @@ io.on('connection', function (socket) {
 			console.log("Room is full");
 			socket.emit('room:full');
 			return;
+		}
+		
+		if (game.get('state') == 'STARTED') {
+			console.log("Room has started");
+			socket.emit('room:alreadyStarted');
 		}
 		
 		console.log("Actually joining with socket");

@@ -228,9 +228,18 @@ html {
 			background-color: #888;
 		}
 		
+		&.black.last {
+			background-color: #a76e6d;
+		}
+		
 		&.white {
 			background-color: #eee;
 		}
+		
+		&.white.last {
+			background-color: #ef9e9c;
+		}
+		
 		&.active {
 			width: calc(12.5% - 4px);
 			height: calc(12.5% - 4px);

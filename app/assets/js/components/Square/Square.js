@@ -33,7 +33,8 @@ var Square = React.createClass({
 				className={"square" + 
 					(this.state.color == 0 ? " white" : " black") + 
 					(this.props.active ? " active" : "") + 
-					(this.props.possible ? " possible" : "")}
+					(this.props.possible ? " possible" : "") + 
+					(this.props.lastSquare ? " last" : "")}
 				onClick={this.handleClick}>
 			</div>
 		);

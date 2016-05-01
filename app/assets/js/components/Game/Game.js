@@ -54,7 +54,9 @@ var Game = React.createClass({
 				},
 			},
 			
-			messages: []
+			messages: [],
+			
+			lastSquares: ['', '']
 		};
 	},
 	
@@ -66,12 +68,25 @@ var Game = React.createClass({
 		socket.on('room:full', this._roomFull);
 		socket.on('room:enter', this._roomEnter);
 		socket.on('room:update', this._roomUpdate);
+		socket.on('room:alreadyStarted', this._roomAlreadyStarted);
 		socket.on('game:timeupdate', this._gameTimeupdate);
 		socket.on('game:timeout', this._gameTimeout);
 		socket.on('chat:receive', this._chatReceive);
 		
 		socket.emit('room:join', {
 			token: this.props.token
+		});
+	},
+	
+	_roomAlreadyStarted: function () {
+		var clearModalMessage = this.clearModalMessage;	
+		this.setState({
+			modalMessage: 'The game has already been started!', 
+			gameState: 'FULL',
+			modalCallback: function () {
+				clearModalMessage();
+				window.location.href = "/";
+			}
 		});
 	},
 	
@@ -128,7 +143,7 @@ var Game = React.createClass({
 	_gameMoved: function (data) {
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
-		this.setState({boards: newBoards});
+		this.setState({boards: newBoards, lastSquares: [data.from, data.to]});
 		
 		if (data.piece != null) {
 			if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
@@ -158,7 +173,7 @@ var Game = React.createClass({
 	_gamePlaced: function (data) {
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
-		this.setState({boards: newBoards});
+		this.setState({boards: newBoards, lastSquares: [data.pos, '']});
 		
 		var newPieces = this.state.pieces;
 		newPieces[data.color][data.piece]--;
@@ -375,7 +390,8 @@ var Game = React.createClass({
 							board={this.state.boards[this.state.boardNum]} 
 							pieces={this.state.pieces}
 							gameState={this.state.gameState}
-							gameMode={this.state.gameMode}/>
+							gameMode={this.state.gameMode}
+							lastSquares={this.state.lastSquares}/>
 					</div>
 					<div className="col">
 						<History history={this.state.history}/>

@@ -227,8 +227,16 @@ html {
   background-color: #888;
 }
 
+.board .square.black.last {
+  background-color: #a76e6d;
+}
+
 .board .square.white {
   background-color: #eee;
+}
+
+.board .square.white.last {
+  background-color: #ef9e9c;
 }
 
 .board .square.active {
