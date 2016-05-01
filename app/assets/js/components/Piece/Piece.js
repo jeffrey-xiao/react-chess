@@ -1,5 +1,19 @@
 var React = require('react');
 var DragSource = require('react-dnd').DragSource;
+var DropTarget = require('react-dnd').DropTarget;
+
+var pieceTarget = {
+	drop: function (props) {
+		props.onClick(props.row, props.col);
+	}
+};
+
+function collectTarget (connect, monitor) {
+	return {
+		connectDropTarget: connect.dropTarget(),
+		isOver: monitor.isOver()
+	};
+};
 
 var pieceSource = {
 	beginDrag: function (props) {
@@ -12,7 +26,7 @@ var pieceSource = {
 	},
 };
 
-function collect (connect, monitor) {
+function collectSource (connect, monitor) {
 	return {
 		connectDragSource: connect.dragSource(),
 		isDragging: monitor.isDragging()
@@ -25,10 +39,12 @@ var Piece = React.createClass({
 	},
 	
 	render: function () {
+    	var connectDropTarget = this.props.connectDropTarget;
+    	var isOver = this.props.isOver
     	var connectDragSource = this.props.connectDragSource;
     	var isDragging = this.props.isDragging;
 		
-		return connectDragSource(
+		return connectDropTarget(connectDragSource(
 			<div 
 				style={{
 					top: (this.props.top) + "%",
@@ -44,8 +60,11 @@ var Piece = React.createClass({
 					src={"../app/assets/img/" + this.props.piece.color + this.props.piece.type + ".svg"}
 					className="piece"/>
 			</div>
-		);
+		));
 	}
 });
 
-module.exports = DragSource('PIECE', pieceSource, collect)(Piece);
+Piece = DragSource('PIECE', pieceSource, collectSource)(Piece);
+Piece = DropTarget("PIECE", pieceTarget, collectTarget)(Piece);
+
+module.exports = Piece;

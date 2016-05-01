@@ -23,7 +23,7 @@ var destPath = __dirname;
 app.set('views', __dirname + '/views/pages');
 app.set('view engine', 'jade');
 
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 app.use(sassMiddleware({
 	src: srcPath,
 	dest: destPath,
@@ -48,7 +48,6 @@ var games = Map();
 var players = Map();
 var availableKeys = SortedSet();
 var maxKey = 0;
-
 
 io.on('connection', function (socket) {
 	console.log('a user has connected', socket.id);
@@ -448,11 +447,6 @@ io.on('connection', function (socket) {
 });
 
 app.use("/", express.static(__dirname + '/'));
-/*
-app.listen(port, hostname, function () {
-	console.log("Server is listening on http://" + hostname + "/" + port);
-});
-*/
 
 http.listen(port, hostname, function () {
 	console.log("Server is listening on http://" + hostname + "/" + port);

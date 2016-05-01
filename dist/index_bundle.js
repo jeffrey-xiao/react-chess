@@ -38164,8 +38164,7 @@
 
 	var Square = __webpack_require__(190);
 	var PieceSupply = __webpack_require__(305);
-	var DragPiece = __webpack_require__(307);
-	var DropPiece = __webpack_require__(308);
+	var Piece = __webpack_require__(404);
 	var Functions = __webpack_require__(309);
 	var Chess = __webpack_require__(186);
 
@@ -38319,27 +38318,16 @@
 				for (var col = 0; col < 8; col++) {
 					var square = Functions.toCode(row, col);
 					if (this.props.board.get(square) != null) {
-						if (this.state.activeRow == -1 && this.state.activeCol == -1 && this.props.board.get(square).color == this.props.color || this.state.activeRow == row && this.state.activeCol == col) {
-							children.push(React.createElement(DragPiece, {
-								top: (this.props.color == 'w' ? 7 - row : row) * 12.5,
-								left: (this.props.color == 'w' ? col : 7 - col) * 12.5,
-								key: row * 8 + col + 64,
-								row: row,
-								col: col,
-								piece: this.props.board.get(square),
-								onDrag: this.handlePieceDrag,
-								onDrop: this.handlePieceDrop,
-								onClick: this.handleSquareClick }));
-						} else {
-							children.push(React.createElement(DropPiece, {
-								top: (this.props.color == 'w' ? 7 - row : row) * 12.5,
-								left: (this.props.color == 'w' ? col : 7 - col) * 12.5,
-								key: row * 8 + col + 64,
-								row: row,
-								col: col,
-								piece: this.props.board.get(square),
-								onClick: this.handleSquareClick }));
-						}
+						children.push(React.createElement(Piece, {
+							top: (this.props.color == 'w' ? 7 - row : row) * 12.5,
+							left: (this.props.color == 'w' ? col : 7 - col) * 12.5,
+							key: row * 8 + col + 64,
+							row: row,
+							col: col,
+							piece: this.props.board.get(square),
+							onDrag: this.handlePieceDrag,
+							onDrop: this.handlePieceDrop,
+							onClick: this.handleSquareClick }));
 					}
 				}
 			}
@@ -44237,114 +44225,8 @@
 	module.exports = DragSource('PIECE', pieceSource, collect)(Piece);
 
 /***/ },
-/* 307 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(2);
-	var DragSource = __webpack_require__(191).DragSource;
-
-	var pieceSource = {
-		beginDrag: function (props) {
-			props.onDrag(props.row, props.col);
-			return {};
-		},
-
-		endDrag: function (props) {
-			props.onDrop();
-		}
-	};
-
-	function collect(connect, monitor) {
-		return {
-			connectDragSource: connect.dragSource(),
-			isDragging: monitor.isDragging()
-		};
-	};
-
-	var Piece = React.createClass({
-		displayName: 'Piece',
-
-		handleClick: function () {
-			this.props.onClick(this.props.row, this.props.col);
-		},
-
-		render: function () {
-			var connectDragSource = this.props.connectDragSource;
-			var isDragging = this.props.isDragging;
-
-			return connectDragSource(React.createElement(
-				'div',
-				{
-					style: {
-						top: this.props.top + "%",
-						left: this.props.left + "%",
-						position: 'absolute',
-						width: '12.5%',
-						height: '12.5%',
-						opacity: isDragging ? 0.5 : 1
-					},
-					onClick: this.handleClick },
-				React.createElement('img', {
-					src: "../app/assets/img/" + this.props.piece.color + this.props.piece.type + ".svg",
-					className: 'piece' })
-			));
-		}
-	});
-
-	module.exports = DragSource('PIECE', pieceSource, collect)(Piece);
-
-/***/ },
-/* 308 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(2);
-	var DropTarget = __webpack_require__(191).DropTarget;
-
-	var pieceTarget = {
-		drop: function (props) {
-			props.onClick(props.row, props.col);
-		}
-	};
-
-	function collect(connect, monitor) {
-		return {
-			connectDropTarget: connect.dropTarget(),
-			isOver: monitor.isOver()
-		};
-	};
-
-	var Piece = React.createClass({
-		displayName: 'Piece',
-
-		handleClick: function () {
-			this.props.onClick(this.props.row, this.props.col);
-		},
-
-		render: function () {
-			var connectDropTarget = this.props.connectDropTarget;
-			var isOver = this.props.isOver;
-
-			return connectDropTarget(React.createElement(
-				'div',
-				{
-					style: {
-						top: this.props.top + "%",
-						left: this.props.left + "%",
-						position: 'absolute',
-						width: '12.5%',
-						height: '12.5%'
-					},
-					onClick: this.handleClick },
-				React.createElement('img', {
-					src: "../app/assets/img/" + this.props.piece.color + this.props.piece.type + ".svg",
-					className: 'piece' })
-			));
-		}
-	});
-
-	module.exports = DropTarget("PIECE", pieceTarget, collect)(Piece);
-
-/***/ },
+/* 307 */,
+/* 308 */,
 /* 309 */
 /***/ function(module, exports) {
 
@@ -48684,6 +48566,82 @@
 	});
 
 	module.exports = GameForm;
+
+/***/ },
+/* 404 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(2);
+	var DragSource = __webpack_require__(191).DragSource;
+	var DropTarget = __webpack_require__(191).DropTarget;
+
+	var pieceTarget = {
+		drop: function (props) {
+			props.onClick(props.row, props.col);
+		}
+	};
+
+	function collectTarget(connect, monitor) {
+		return {
+			connectDropTarget: connect.dropTarget(),
+			isOver: monitor.isOver()
+		};
+	};
+
+	var pieceSource = {
+		beginDrag: function (props) {
+			props.onDrag(props.row, props.col);
+			return {};
+		},
+
+		endDrag: function (props) {
+			props.onDrop();
+		}
+	};
+
+	function collectSource(connect, monitor) {
+		return {
+			connectDragSource: connect.dragSource(),
+			isDragging: monitor.isDragging()
+		};
+	};
+
+	var Piece = React.createClass({
+		displayName: 'Piece',
+
+		handleClick: function () {
+			this.props.onClick(this.props.row, this.props.col);
+		},
+
+		render: function () {
+			var connectDropTarget = this.props.connectDropTarget;
+			var isOver = this.props.isOver;
+			var connectDragSource = this.props.connectDragSource;
+			var isDragging = this.props.isDragging;
+
+			return connectDropTarget(connectDragSource(React.createElement(
+				'div',
+				{
+					style: {
+						top: this.props.top + "%",
+						left: this.props.left + "%",
+						position: 'absolute',
+						width: '12.5%',
+						height: '12.5%',
+						opacity: isDragging ? 0.5 : 1
+					},
+					onClick: this.handleClick },
+				React.createElement('img', {
+					src: "../app/assets/img/" + this.props.piece.color + this.props.piece.type + ".svg",
+					className: 'piece' })
+			)));
+		}
+	});
+
+	Piece = DragSource('PIECE', pieceSource, collectSource)(Piece);
+	Piece = DropTarget("PIECE", pieceTarget, collectTarget)(Piece);
+
+	module.exports = Piece;
 
 /***/ }
 /******/ ]);

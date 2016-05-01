@@ -1,7 +1,6 @@
 var Square = require('../Square/Square.js');
 var PieceSupply = require('../PieceSupply/PieceSupply.js');
-var DragPiece = require('../Piece/DragPiece.js');
-var DropPiece = require('../Piece/DropPiece.js');
+var Piece = require('../Piece/Piece.js');
 var Functions = require('../../lib/functions.js');
 var Chess = require('../../lib/chess.min.js');
 
@@ -174,32 +173,18 @@ var Board = React.createClass({
 			for (var col = 0; col < 8; col++) {
 				var square = Functions.toCode(row, col);
 				if (this.props.board.get(square) != null) {
-					if ((this.state.activeRow == -1 && this.state.activeCol == -1 && this.props.board.get(square).color == this.props.color) ||
-					    (this.state.activeRow == row && this.state.activeCol == col)) {
-						children.push(
-							<DragPiece
-								top={(this.props.color == 'w' ? (7 - row) : (row)) * 12.5}
-								left={(this.props.color == 'w' ? (col) : (7 - col)) * 12.5}
-								key={row * 8 + col + 64}
-								row={row}
-								col={col}
-								piece={this.props.board.get(square)}
-								onDrag={this.handlePieceDrag}
-								onDrop={this.handlePieceDrop}
-								onClick={this.handleSquareClick}/>
-						);
-					} else {
-						children.push(
-							<DropPiece
-								top={(this.props.color == 'w' ? (7 - row) : (row)) * 12.5}
-								left={(this.props.color == 'w' ? (col) : (7 - col)) * 12.5}
-								key={row * 8 + col + 64}
-								row={row}
-								col={col}
-								piece={this.props.board.get(square)}
-								onClick={this.handleSquareClick}/>
-						);
-					}
+					children.push(
+						<Piece
+							top={(this.props.color == 'w' ? (7 - row) : (row)) * 12.5}
+							left={(this.props.color == 'w' ? (col) : (7 - col)) * 12.5}
+							key={row * 8 + col + 64}
+							row={row}
+							col={col}
+							piece={this.props.board.get(square)}
+							onDrag={this.handlePieceDrag}
+							onDrop={this.handlePieceDrop}
+							onClick={this.handleSquareClick}/>
+					);
 				}
 			}
 		}
