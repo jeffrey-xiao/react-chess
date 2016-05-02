@@ -163,8 +163,6 @@ io.on('connection', function (socket) {
 		var piece = null;
 		var color = null;
 		
-		console.log(isPromoted);
-		console.log(fromRow, fromCol, toRow, toCol);
 		
 		if (games.getIn([data.token, 'boards', data.boardNum]).get(data.to) != null) {
 			piece = games.getIn([data.token, 'boards', data.boardNum]).get(data.to).type;
@@ -175,8 +173,7 @@ io.on('connection', function (socket) {
 		
 		if (isPromoted[fromRow][fromCol] || ((toRow == 0 || toRow == 7) && games.getIn([data.token, 'boards', data.boardNum]).get(data.from).type == 'p'))
 			isPromoted[toRow][toCol] = true;
-		console.log("AFTER ", isPromoted);
-		console.log(games.getIn([data.token, 'boards', data.boardNum]).get(data.from).type == 'p');
+
 		isPromoted[fromRow][fromCol] = false;
 		
 		var san = games.getIn([data.token, 'boards', data.boardNum]).move({

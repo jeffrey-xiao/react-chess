@@ -200,6 +200,7 @@ html {
   height: calc((60vw));
   max-height: calc((80vh - 150px));
   position: relative;
+  margin: 0px 10px;
 }
 
 .board .piece {
@@ -211,10 +212,10 @@ html {
   display: inline-block;
   float: left;
   font-size: 0;
-  width: calc(12.5% - 4px);
-  height: calc(12.5% - 4px);
+  width: calc(12.5% - 6px);
+  height: calc(12.5% - 6px);
   margin: 0;
-  border: solid 2px transparent;
+  border: solid 3px transparent;
   position: relative;
 }
 
@@ -240,9 +241,9 @@ html {
 }
 
 .board .square.active {
-  width: calc(12.5% - 4px);
-  height: calc(12.5% - 4px);
-  border: solid 2px red;
+  width: calc(12.5% - 6px);
+  height: calc(12.5% - 6px);
+  border: solid 3px #880000;
 }
 
 .board .square.possible:before {
@@ -253,7 +254,7 @@ html {
   position: absolute;
   top: 40%;
   left: 40%;
-  background-color: red;
+  background-color: #880000;
   z-index: 100;
 }
 

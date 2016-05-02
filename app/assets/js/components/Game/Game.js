@@ -56,7 +56,7 @@ var Game = React.createClass({
 			
 			messages: [],
 			
-			lastSquares: ['', '']
+			lastSquares: []
 		};
 	},
 	
@@ -125,10 +125,13 @@ var Game = React.createClass({
 		var boards = [];
 		var teamTimers1 = [];
 		var teamTimers2 = [];
+		var lastSquares = [];
+		
 		for (var i = 0; i < data.numOfBoards; i++) {
 			boards.push(new Chess());
 			teamTimers1.push(data.time);
 			teamTimers2.push(data.time);
+			lastSquares.push(['', '']);
 		}
 		
 		this.setState({
@@ -136,15 +139,20 @@ var Game = React.createClass({
 			boardNum: data.boardNum,
 			boards: boards,
 			teamTimers1: teamTimers1,
-			teamTimers2: teamTimers2
+			teamTimers2: teamTimers2,
+			lastSquares: lastSquares
 		});
 	},
 	
 	_gameMoved: function (data) {
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
+		
+		var newLastSquares = this.state.lastSquares;
+		newLastSquares[data.boardNum] = [data.from, data.to];
+		
 		if (data.boardNum == this.state.boardNum)
-			this.setState({boards: newBoards, lastSquares: [data.from, data.to]});
+			this.setState({boards: newBoards, lastSquares: newLastSquares});
 		
 		if (data.piece != null) {
 			if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
@@ -174,7 +182,11 @@ var Game = React.createClass({
 	_gamePlaced: function (data) {
 		var newBoards = this.state.boards;
 		newBoards[data.boardNum] = new Chess(data.fen);
-		this.setState({boards: newBoards, lastSquares: [data.pos, '']});
+		
+		var newLastSquares = this.state.lastSquares;
+		newLastSquares[data.boardNum] = [data.pos, ''];
+		
+		this.setState({boards: newBoards, lastSquares: newLastSquares});
 		
 		var newPieces = this.state.pieces;
 		newPieces[data.color][data.piece]--;
@@ -392,8 +404,22 @@ var Game = React.createClass({
 							pieces={this.state.pieces}
 							gameState={this.state.gameState}
 							gameMode={this.state.gameMode}
-							lastSquares={this.state.lastSquares}/>
+							lastSquares={this.state.lastSquares[this.state.boardNum]}
+							playable={true}/>
 					</div>
+					{
+						this.state.gameMode == 'BUGHOUSE' ?
+						<div className="col">
+							<Board color={this.getColor() == 'w' ? 'b' : 'w'} 
+								onMove={this.handleMove} 
+								board={this.state.boards[(this.state.boardNum + 1) % 2]} 
+								pieces={this.state.pieces}
+								gameState={this.state.gameState}
+								gameMode={this.state.gameMode}
+								lastSquares={this.state.lastSquares[(this.state.boardNum + 1) % 2]}
+								playable={false}/>
+						</div> : ''
+					}
 					<div className="col">
 						<History history={this.state.history}/>
 						<Chat 

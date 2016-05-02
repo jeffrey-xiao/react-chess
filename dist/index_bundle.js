@@ -32801,7 +32801,7 @@
 
 				messages: [],
 
-				lastSquares: ['', '']
+				lastSquares: []
 			};
 		},
 
@@ -32864,10 +32864,13 @@
 			var boards = [];
 			var teamTimers1 = [];
 			var teamTimers2 = [];
+			var lastSquares = [];
+
 			for (var i = 0; i < data.numOfBoards; i++) {
 				boards.push(new Chess());
 				teamTimers1.push(data.time);
 				teamTimers2.push(data.time);
+				lastSquares.push(['', '']);
 			}
 
 			this.setState({
@@ -32875,14 +32878,19 @@
 				boardNum: data.boardNum,
 				boards: boards,
 				teamTimers1: teamTimers1,
-				teamTimers2: teamTimers2
+				teamTimers2: teamTimers2,
+				lastSquares: lastSquares
 			});
 		},
 
 		_gameMoved: function (data) {
 			var newBoards = this.state.boards;
 			newBoards[data.boardNum] = new Chess(data.fen);
-			if (data.boardNum == this.state.boardNum) this.setState({ boards: newBoards, lastSquares: [data.from, data.to] });
+
+			var newLastSquares = this.state.lastSquares;
+			newLastSquares[data.boardNum] = [data.from, data.to];
+
+			if (data.boardNum == this.state.boardNum) this.setState({ boards: newBoards, lastSquares: newLastSquares });
 
 			if (data.piece != null) {
 				if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
@@ -32912,7 +32920,11 @@
 		_gamePlaced: function (data) {
 			var newBoards = this.state.boards;
 			newBoards[data.boardNum] = new Chess(data.fen);
-			this.setState({ boards: newBoards, lastSquares: [data.pos, ''] });
+
+			var newLastSquares = this.state.lastSquares;
+			newLastSquares[data.boardNum] = [data.pos, ''];
+
+			this.setState({ boards: newBoards, lastSquares: newLastSquares });
 
 			var newPieces = this.state.pieces;
 			newPieces[data.color][data.piece]--;
@@ -33138,8 +33150,21 @@
 							pieces: this.state.pieces,
 							gameState: this.state.gameState,
 							gameMode: this.state.gameMode,
-							lastSquares: this.state.lastSquares })
+							lastSquares: this.state.lastSquares[this.state.boardNum],
+							playable: true })
 					),
+					this.state.gameMode == 'BUGHOUSE' ? React.createElement(
+						'div',
+						{ className: 'col' },
+						React.createElement(Board, { color: this.getColor() == 'w' ? 'b' : 'w',
+							onMove: this.handleMove,
+							board: this.state.boards[(this.state.boardNum + 1) % 2],
+							pieces: this.state.pieces,
+							gameState: this.state.gameState,
+							gameMode: this.state.gameMode,
+							lastSquares: this.state.lastSquares[(this.state.boardNum + 1) % 2],
+							playable: false })
+					) : '',
 					React.createElement(
 						'div',
 						{ className: 'col' },
@@ -38236,7 +38261,7 @@
 		},
 
 		handleSquareClick: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || !this.props.playable) return;
 
 			var activePos = Functions.toCode(this.state.activeRow, this.state.activeCol);
 			var currPos = Functions.toCode(row, col);
@@ -38268,7 +38293,7 @@
 		},
 
 		handleSupplyClick: function (piece) {
-			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
+			if (this.props.gameState != 'START' || !this.props.playable || this.props.gameMode == 'NORMAL') return;
 
 			if (this.state.activePiece == piece) {
 				this.setState({ activePiece: '' });
@@ -38278,25 +38303,25 @@
 		},
 
 		handleSupplyDrag: function (piece) {
-			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
+			if (this.props.gameState != 'START' || !this.props.playable || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activeRow: -1, activeCol: -1, activePiece: piece });
 		},
 
 		handleSupplyDrop: function (piece) {
-			if (this.props.gameState != 'START' || this.props.gameMode == 'NORMAL') return;
+			if (this.props.gameState != 'START' || !this.props.playable || this.props.gameMode == 'NORMAL') return;
 
 			this.setState({ activePiece: '' });
 		},
 
 		handlePieceDrag: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || !this.props.playable) return;
 
 			this.setState({ activeRow: row, activeCol: col, activePiece: '' });
 		},
 
 		handlePieceDrop: function (row, col) {
-			if (this.props.gameState != 'START') return;
+			if (this.props.gameState != 'START' || !this.props.playable) return;
 
 			this.setState({ activeRow: -1, activeCol: -1 });
 		},
