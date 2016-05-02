@@ -13,6 +13,7 @@ var History = require('../History/History.js');
 var Chat = require('../Chat/Chat.js');
 
 var Chess = require('../../lib/chess.min.js');
+var Functions = require('../../lib/functions.js');
 
 var Game = React.createClass({
 	getInitialState: function () {
@@ -332,7 +333,14 @@ var Game = React.createClass({
 	},
 	
 	handleGameover: function () {
-		if (this.state.boards[this.state.boardNum].in_checkmate()) {
+		var board = this.state.boards[this.state.boardNum];
+		var pieces = this.state.pieces;
+		console.log(pieces);
+		var color = this.state.boards[this.state.boardNum].turn();
+		console.log(color);
+		console.log(pieces[color]);
+		console.log(pieces[color]['p']);
+		if (Functions.isCheckmate(board, pieces, color)) {
 			if (this.state.boards[this.state.boardNum].turn() == this.getColor())
 				this.setState({
 					gameState: 'STOP',
@@ -350,14 +358,7 @@ var Game = React.createClass({
 				token: this.props.token
 			});
 			
-		} else if (this.state.boards[this.state.boardNum].in_draw() || 
-				   this.state.boards[this.state.boardNum].in_stalemate() ||
-				   this.state.boards[this.state.boardNum].in_threefold_repetition()) {
-			console.log(this.state.boards[this.state.boardNum].in_draw());
-			console.log(this.state.boards[this.state.boardNum].in_stalemate());
-			console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
-			console.log(this.state.boards[this.state.boardNum].insufficient_material());
-			
+		} else if (Functions.isDrawn(board, pieces)) {
 			this.setState({
 				gameState: 'STOP',
 				modalMessage: 'Game was drawn!'

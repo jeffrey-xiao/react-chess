@@ -5,6 +5,10 @@ function padZero (num, places) {
   	return Array(+(zero > 0 && zero)).join("0") + num;
 };
 
+function toCode (row, col) {
+	return String.fromCharCode(col + 97) + "" + (row + 1);
+};
+
 module.exports = {
 	toCode: function (row, col) {
 		return String.fromCharCode(col + 97) + "" + (row + 1); 
@@ -39,5 +43,40 @@ module.exports = {
 		return seconds + "." + Math.floor(time * 10);
 	},
 	
-	padZero: padZero
+	padZero: padZero,
+	
+	isCheckmate: function (board, pieces, color) {
+		console.log(pieces, color);
+		var hasPawn = pieces[color]['p'] > 0;
+		var hasOther = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] > 0;
+		
+		if (!board.in_checkmate())
+			return false;
+		
+		for (var row = 0; row < 8; row++) {
+			for (var col = 0; col < 8; col++) {
+				var square = toCode(row, col);
+				if (board.get(square) == null && (hasOther || (row != 0 && row != 7 && hasPawn))) {
+					board.put({
+						type: 'p',
+						color: color
+					}, square);
+					
+					if (!board.in_check())
+						return false;
+					
+					board.remove(square);
+				}
+			}
+		}
+		
+		return true;
+	},
+	
+	isDrawn: function (board, pieces) {
+		var hasPieces = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] + pieces[color]['p'] > 0;
+		if (board.in_draw() && !hasPieces)
+			return true;
+		return false;
+	}
 };

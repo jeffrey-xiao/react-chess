@@ -32756,6 +32756,7 @@
 	var Chat = __webpack_require__(401);
 
 	var Chess = __webpack_require__(186);
+	var Functions = __webpack_require__(308);
 
 	var Game = React.createClass({
 		displayName: 'Game',
@@ -33069,7 +33070,14 @@
 		},
 
 		handleGameover: function () {
-			if (this.state.boards[this.state.boardNum].in_checkmate()) {
+			var board = this.state.boards[this.state.boardNum];
+			var pieces = this.state.pieces;
+			console.log(pieces);
+			var color = this.state.boards[this.state.boardNum].turn();
+			console.log(color);
+			console.log(pieces[color]);
+			console.log(pieces[color]['p']);
+			if (Functions.isCheckmate(board, pieces, color)) {
 				if (this.state.boards[this.state.boardNum].turn() == this.getColor()) this.setState({
 					gameState: 'STOP',
 					modalMessage: 'You have lost!'
@@ -33084,12 +33092,7 @@
 					boardNum: this.state.boardNum,
 					token: this.props.token
 				});
-			} else if (this.state.boards[this.state.boardNum].in_draw() || this.state.boards[this.state.boardNum].in_stalemate() || this.state.boards[this.state.boardNum].in_threefold_repetition()) {
-				console.log(this.state.boards[this.state.boardNum].in_draw());
-				console.log(this.state.boards[this.state.boardNum].in_stalemate());
-				console.log(this.state.boards[this.state.boardNum].in_threefold_repetition());
-				console.log(this.state.boards[this.state.boardNum].insufficient_material());
-
+			} else if (Functions.isDrawn(board, pieces)) {
 				this.setState({
 					gameState: 'STOP',
 					modalMessage: 'Game was drawn!'
@@ -38245,11 +38248,13 @@
 			if (piece == 'p' && (row == 0 || row == 7)) return false;
 
 			// cannot drop mate
-			board.put({ type: this.state.activePiece, color: this.props.color }, square, false);
-			board = this.forceTurn(board, this.props.color == 'w' ? 'b' : 'w');
-			if (board.in_checkmate()) {
-				return false;
-			}
+			/*
+	  board.put({type: this.state.activePiece, color: this.props.color}, square, false);
+	  board = this.forceTurn(board, this.props.color == 'w' ? 'b' : 'w');
+	  if (board.in_checkmate()) {
+	  	return false;
+	  }
+	  */
 
 			// cannot drop and still be in check
 			board = this.forceTurn(board, this.props.color);
@@ -44424,6 +44429,10 @@
 		return Array(+(zero > 0 && zero)).join("0") + num;
 	};
 
+	function toCode(row, col) {
+		return String.fromCharCode(col + 97) + "" + (row + 1);
+	};
+
 	module.exports = {
 		toCode: function (row, col) {
 			return String.fromCharCode(col + 97) + "" + (row + 1);
@@ -44453,7 +44462,39 @@
 			return seconds + "." + Math.floor(time * 10);
 		},
 
-		padZero: padZero
+		padZero: padZero,
+
+		isCheckmate: function (board, pieces, color) {
+			console.log(pieces, color);
+			var hasPawn = pieces[color]['p'] > 0;
+			var hasOther = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] > 0;
+
+			if (!board.in_checkmate()) return false;
+
+			for (var row = 0; row < 8; row++) {
+				for (var col = 0; col < 8; col++) {
+					var square = toCode(row, col);
+					if (board.get(square) == null && (hasOther || row != 0 && row != 7 && hasPawn)) {
+						board.put({
+							type: 'p',
+							color: color
+						}, square);
+
+						if (!board.in_check()) return false;
+
+						board.remove(square);
+					}
+				}
+			}
+
+			return true;
+		},
+
+		isDrawn: function (board, pieces) {
+			var hasPieces = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] + pieces[color]['p'] > 0;
+			if (board.in_draw() && !hasPieces) return true;
+			return false;
+		}
 	};
 
 /***/ },

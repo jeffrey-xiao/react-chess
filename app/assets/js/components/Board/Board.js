@@ -41,11 +41,13 @@ var Board = React.createClass({
 			return false;
 	
 		// cannot drop mate
+		/*
 		board.put({type: this.state.activePiece, color: this.props.color}, square, false);
 		board = this.forceTurn(board, this.props.color == 'w' ? 'b' : 'w');
 		if (board.in_checkmate()) {
 			return false;
 		}
+		*/
 		
 		// cannot drop and still be in check
 		board = this.forceTurn(board, this.props.color);
