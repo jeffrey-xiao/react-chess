@@ -29,31 +29,23 @@ var Game = React.createClass({
 			creatorId: '',
 			
 			boardNum: -1,
+			
+			// list of sockets
 			team1: [],
 			team2: [],
+			
+			// list of chessboards
 			boards: [],
+			
+			// list of timers
 			teamTimers1: [],
 			teamTimer2: [],
 			
+			// history of moves made of current board
 			history: [],
 			
-			pieces: {
-				w: {
-					q: 0,
-					r: 0,
-					b: 0,
-					n: 0,
-					p: 0
-				},
-				
-				b: {
-					q: 0,
-					r: 0,
-					b: 0,
-					n: 0,
-					p: 0
-				},
-			},
+			// list of pieces
+			pieces: [],
 			
 			messages: [],
 			
@@ -127,12 +119,30 @@ var Game = React.createClass({
 		var teamTimers1 = [];
 		var teamTimers2 = [];
 		var lastSquares = [];
+		var pieces = []
 		
 		for (var i = 0; i < data.numOfBoards; i++) {
 			boards.push(new Chess());
 			teamTimers1.push(data.time);
 			teamTimers2.push(data.time);
 			lastSquares.push(['', '']);
+			pieces.push({
+				w: {
+					q: 0,
+					r: 0,
+					b: 0,
+					n: 0,
+					p: 0
+				},
+				
+				b: {
+					q: 0,
+					r: 0,
+					b: 0,
+					n: 0,
+					p: 0
+				},
+			});
 		}
 		
 		this.setState({
@@ -141,7 +151,8 @@ var Game = React.createClass({
 			boards: boards,
 			teamTimers1: teamTimers1,
 			teamTimers2: teamTimers2,
-			lastSquares: lastSquares
+			lastSquares: lastSquares,
+			pieces: pieces
 		});
 	},
 	
@@ -156,17 +167,20 @@ var Game = React.createClass({
 			this.setState({boards: newBoards, lastSquares: newLastSquares});
 		
 		if (data.piece != null) {
-			if (this.state.gameMode == 'NORMAL' && data.boardNum == this.state.boardNum) {
+			if (this.state.gameMode == 'NORMAL') {
 				var newPieces = this.state.pieces;
-				newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
+				newPieces[this.state.boardNum][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 				this.setState({pieces: newPieces});
 			} else if (this.state.gameMode == 'CRAZYHOUSE') {
 				var newPieces = this.state.pieces;
-				newPieces[data.color][data.piece]++;
+				
+				for (var i = 0; i < newPieces.length; i++)
+					newPieces[i][data.color][data.piece]++;
+				
 				this.setState({pieces: newPieces});
-			} else if (this.state.gameMode == 'BUGHOUSE' && data.boardNum != this.state.boardNum) {
+			} else if (this.state.gameMode == 'BUGHOUSE') {
 				var newPieces = this.state.pieces;
-				newPieces[data.color == 'w' ? 'b' : 'w'][data.piece]++;
+				newPieces[(this.state.boardNum + 1) % 2][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 				this.setState({pieces: newPieces});
 			}
 		}
@@ -189,9 +203,18 @@ var Game = React.createClass({
 		
 		this.setState({boards: newBoards, lastSquares: newLastSquares});
 		
-		var newPieces = this.state.pieces;
-		newPieces[data.color][data.piece]--;
-		this.setState({pieces: newPieces});
+		if (this.state.gameMode == 'BUGHOUSE') {
+			var newPieces = this.state.pieces;
+			newPieces[data.boardNum][data.color][data.piece]--;
+			this.setState({pieces: newPieces});
+		} else if (this.state.gameMode == 'CRAZYHOUSE') {
+			var newPieces = this.state.pieces;
+			
+			for (var i = 0; i < newPieces.length; i++)
+				newPieces[i][data.color][data.piece]--;
+			
+			this.setState({pieces: newPieces});
+		}	
 		
 		if (data.boardNum == this.state.boardNum) {
 			var newHistory = this.state.history;
@@ -334,7 +357,7 @@ var Game = React.createClass({
 	
 	handleGameover: function () {
 		var board = this.state.boards[this.state.boardNum];
-		var pieces = this.state.pieces;
+		var pieces = this.state.pieces[this.state.boardNum];
 		var color = this.state.boards[this.state.boardNum].turn();
 
 		if (Functions.isCheckmate(board, pieces, color)) {
@@ -399,7 +422,7 @@ var Game = React.createClass({
 						<Board color={this.getColor()} 
 							onMove={this.handleMove} 
 							board={this.state.boards[this.state.boardNum]} 
-							pieces={this.state.pieces}
+							pieces={this.state.pieces[this.state.boardNum]}
 							gameState={this.state.gameState}
 							gameMode={this.state.gameMode}
 							lastSquares={this.state.lastSquares[this.state.boardNum]}
@@ -411,7 +434,7 @@ var Game = React.createClass({
 							<Board color={this.getColor() == 'w' ? 'b' : 'w'} 
 								onMove={this.handleMove} 
 								board={this.state.boards[(this.state.boardNum + 1) % 2]} 
-								pieces={this.state.pieces}
+								pieces={this.state.pieces[(this.state.boardNum + 1) % 2]}
 								gameState={this.state.gameState}
 								gameMode={this.state.gameMode}
 								lastSquares={this.state.lastSquares[(this.state.boardNum + 1) % 2]}
