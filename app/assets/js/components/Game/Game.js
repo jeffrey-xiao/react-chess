@@ -169,7 +169,7 @@ var Game = React.createClass({
 		if (data.piece != null) {
 			if (this.state.gameMode == 'NORMAL') {
 				var newPieces = this.state.pieces;
-				newPieces[this.state.boardNum][data.color == 'w' ? 'b' : 'w'][data.piece]++;
+				newPieces[data.boardNum][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 				this.setState({pieces: newPieces});
 			} else if (this.state.gameMode == 'CRAZYHOUSE') {
 				var newPieces = this.state.pieces;
@@ -180,7 +180,7 @@ var Game = React.createClass({
 				this.setState({pieces: newPieces});
 			} else if (this.state.gameMode == 'BUGHOUSE') {
 				var newPieces = this.state.pieces;
-				newPieces[(this.state.boardNum + 1) % 2][data.color == 'w' ? 'b' : 'w'][data.piece]++;
+				newPieces[(data.boardNum + 1) % 2][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 				this.setState({pieces: newPieces});
 			}
 		}

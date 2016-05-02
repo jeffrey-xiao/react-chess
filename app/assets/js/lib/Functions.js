@@ -73,7 +73,7 @@ module.exports = {
 		return true;
 	},
 	
-	isDrawn: function (board, pieces) {
+	isDrawn: function (board, pieces, color) {
 		var hasPieces = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] + pieces[color]['p'] > 0;
 		if (board.in_draw() && !hasPieces)
 			return true;

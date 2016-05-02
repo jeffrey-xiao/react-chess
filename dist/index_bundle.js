@@ -32907,7 +32907,7 @@
 			if (data.piece != null) {
 				if (this.state.gameMode == 'NORMAL') {
 					var newPieces = this.state.pieces;
-					newPieces[this.state.boardNum][data.color == 'w' ? 'b' : 'w'][data.piece]++;
+					newPieces[data.boardNum][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 					this.setState({ pieces: newPieces });
 				} else if (this.state.gameMode == 'CRAZYHOUSE') {
 					var newPieces = this.state.pieces;
@@ -32917,7 +32917,7 @@
 					this.setState({ pieces: newPieces });
 				} else if (this.state.gameMode == 'BUGHOUSE') {
 					var newPieces = this.state.pieces;
-					newPieces[(this.state.boardNum + 1) % 2][data.color == 'w' ? 'b' : 'w'][data.piece]++;
+					newPieces[(data.boardNum + 1) % 2][data.color == 'w' ? 'b' : 'w'][data.piece]++;
 					this.setState({ pieces: newPieces });
 				}
 			}
@@ -44508,7 +44508,7 @@
 			return true;
 		},
 
-		isDrawn: function (board, pieces) {
+		isDrawn: function (board, pieces, color) {
 			var hasPieces = pieces[color]['n'] + pieces[color]['b'] + pieces[color]['r'] + pieces[color]['q'] + pieces[color]['p'] > 0;
 			if (board.in_draw() && !hasPieces) return true;
 			return false;
