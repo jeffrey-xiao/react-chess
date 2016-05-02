@@ -2,17 +2,18 @@ var Timer = function (time, inc, boardNum, update, callback) {
 	var remainingTime = time;
 	var boardNum = boardNum;
 	var interval = null;
+	var delta = 200;
 	
 	function start () {
 		stop();
 		interval = setInterval(function () {
-			remainingTime -= 1.0;
+			remainingTime -= delta / 1000;
 			update(remainingTime, boardNum);
-			if (remainingTime < 0.1) {
+			if (remainingTime < delta / 1000) {
 				clearInterval(interval);
 				callback(boardNum);
 			}
-		}, 1000);
+		}, delta);
 	};
 	
 	function stop () {

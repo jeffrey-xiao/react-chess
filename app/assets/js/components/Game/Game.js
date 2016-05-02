@@ -335,11 +335,8 @@ var Game = React.createClass({
 	handleGameover: function () {
 		var board = this.state.boards[this.state.boardNum];
 		var pieces = this.state.pieces;
-		console.log(pieces);
 		var color = this.state.boards[this.state.boardNum].turn();
-		console.log(color);
-		console.log(pieces[color]);
-		console.log(pieces[color]['p']);
+
 		if (Functions.isCheckmate(board, pieces, color)) {
 			if (this.state.boards[this.state.boardNum].turn() == this.getColor())
 				this.setState({
@@ -358,7 +355,7 @@ var Game = React.createClass({
 				token: this.props.token
 			});
 			
-		} else if (Functions.isDrawn(board, pieces)) {
+		} else if (Functions.isDrawn(board, pieces, color)) {
 			this.setState({
 				gameState: 'STOP',
 				modalMessage: 'Game was drawn!'

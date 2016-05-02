@@ -259,6 +259,7 @@ html {
 }
 
 .game-header .clock {
+  white-space: nowrap;
   width: 150px;
   height: 50px;
   background-color: #aaa;
