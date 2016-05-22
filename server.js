@@ -50,7 +50,7 @@ var availableKeys = SortedSet();
 var maxKey = 0;
 
 io.on('connection', function (socket) {
-	console.log('a user has connected', socket.id);
+	console.log('a user has connected:', socket.id);
 	socket.on('disconnect', function () {
 		console.log('a user disconnected');
 		if (players.get(socket.id) == null)
