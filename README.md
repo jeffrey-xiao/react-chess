@@ -1,5 +1,5 @@
-# React Reddit
-Reddit clone with [Node](http://nodejs.org/), [Express](http://expressjs.com/), [React](http://facebook.github.io/react/), and [Socket](socket.io/). Only supports the major operations: self-posts, linked-posts, upvotes, account registration, logins, and post and comment creation. The styling is very minimal.
+# React Chess
+Chess clone with [Node](http://nodejs.org/), [Express](http://expressjs.com/), [React](http://facebook.github.io/react/), and [Socket](socket.io/). Supports room creation, different game modes (Bughouse, Crazyhouse, Regular), timer, a chatroom, and a history of moves.
 
 Try it out here: http://reactchess-jeffreyxiao.rhcloud.com/
 
