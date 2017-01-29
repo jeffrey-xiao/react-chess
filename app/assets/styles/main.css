@@ -212,8 +212,8 @@ html {
   display: inline-block;
   float: left;
   font-size: 0;
-  width: calc(12.5% - 6px);
-  height: calc(12.5% - 6px);
+  width: calc(12.5% - 5px);
+  height: calc(12.5% - 5px);
   margin: 0;
   border: solid 3px transparent;
   position: relative;
@@ -241,8 +241,8 @@ html {
 }
 
 .board .square.active {
-  width: calc(12.5% - 6px);
-  height: calc(12.5% - 6px);
+  width: calc(12.5% - 5px);
+  height: calc(12.5% - 5px);
   border: solid 3px #880000;
 }
 
